@@ -6,11 +6,20 @@ WORKDIR /app
 # Install cron
 RUN apk add --no-cache curl bash
 RUN apk add --no-cache cronie
+RUN apk add --no-cache gcc
+RUN apk add --no-cache musl-dev
 
 # Copy Python packages
 COPY requirements.txt ./
 RUN pip install -r requirements.txt
+RUN pip install -U setuptools
 
+# Copy the C extension
+COPY algorithm/ ./
+
+# Compile the extension
+RUN python setup.py build
+RUN python setup.py install
 
 # Copy app source code
 COPY src/ ./

@@ -1,5 +1,7 @@
 from algorithm import recovering_difference_softmax
 import numpy as np
+from my_module import say_hello
+
 
 # Example Items
 scores = np.array([0.3, 0.6, 0.1, 0.9])  # From Model

@@ -1,0 +1,3 @@
+services:
+  score:
+    build: scorer

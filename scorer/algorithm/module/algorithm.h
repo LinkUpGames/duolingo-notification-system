@@ -1,3 +1,5 @@
+#include "date.h"
+
 // An arm that corresponds to a notification to be there
 typedef struct Arm {
   // The name of the arm
@@ -9,17 +11,19 @@ typedef struct Arm {
   // The reward [0,1] for the arm
   float reward;
 
-  // The time this arm was last sent
-  float last_sent;
+  // The time this arm was last sent as a timestamp
+  timestamp last_sent;
 } Arm;
 
 /**
- * Select the arm given an array of arms with prior information to choose from
- * @param arms The array of arms
- * @param length the length of the array
- * @param alpha The alpha value that is used to know how accurate the alpha
- * value is
- * @param beta The beta value that is used to know how accurate previous
- * counts are
+ * Update the scores of each arm given the prior chosen arm
+ * @param arms Array with each arm
+ * @param length The length of the arms array
+ * @param chosen_arm The name of the arm that was chosen by algorithm previously
+ * @param selected Whether the arm by algorithm was selected by the user (1 or
+ * 0);
+ * @param alpha The learning rate
+ * @param beta The temperature
  */
-char *select_arm(Arm **arms, int length, float alpha, float beta);
+void update_scores(Arm **arms, int length, char *chosen_arm, int selected,
+                   float alpha, float beta);

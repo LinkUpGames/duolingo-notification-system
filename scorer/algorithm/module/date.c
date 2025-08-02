@@ -1,22 +1,15 @@
-#include <stdlib.h>
+#include "date.h"
 #include <time.h>
 
-struct tm *get_utc_time() {
-  struct tm *utc_time = NULL;
+struct timespec get_current_time() {
+  struct timespec current;
+  clock_gettime(CLOCK_REALTIME, &current);
 
-  // Get the current time as a time_t object
-  time_t rawtime;
-  time(&rawtime);
+  return current;
+}
 
-  // Get the current utc time
-  struct tm *gmtime_object = gmtime(&rawtime);
+timestamp get_milliseconds(struct timespec time) {
+  timestamp current = (timestamp)time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
-  // Copy it over
-  if (gmtime_object != NULL) {
-    utc_time = malloc(sizeof(struct tm));
-
-    *utc_time = *gmtime_object;
-  }
-
-  return utc_time;
+  return current;
 }

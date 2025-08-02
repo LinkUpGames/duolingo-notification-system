@@ -1,31 +1,78 @@
 #include "algorithm.h"
 #include "date.h"
-#include <time.h>
+#include <math.h>
+#include <stdlib.h>
+#include <string.h>
 
-char *select_arm(Arm **arms, int length, float alpha, float beta) {
-  // Get current time
-  struct tm *time = get_utc_time();
+/**
+ * Get the softmax values for the arms based on the temperature
+ * NOTE: This returns a pointer that must be FREED!
+ * @param arms The array of arms
+ * @param length The length of the array
+ * @param beta The temperature chosen
+ */
+float *softmax_probabilities(Arm **arms, int length, float beta) {
+  float *values;
+  float sum_exps = 0;
+  float max_reward = 0;
 
-  // Iterate through every arm
+  // Calculate the max score
   for (int i = 0; i < length; i++) {
     Arm *arm = arms[i];
+    max_reward = arm->reward > max_reward ? arm->reward : max_reward;
+  }
 
-    float count = arm->count;
+  // Calculate the exponential function
+  values = (float *)calloc(length, sizeof(float));
+  if (values == NULL) {
+    return NULL;
+  }
+
+  for (int i = 0; i < length; i++) {
+    Arm *arm = arms[i];
     float reward = arm->reward;
 
-    float average_reward = 0;
-    float recovery = 30; // a month old, this could be anything though
+    float exp_p = exp((reward - max_reward) / beta);
+    values[i] = exp_p;
+    sum_exps += exp_p;
+  }
 
-    // If the arm is not new and has a history of being selected
-    if (reward > 0) {
-      average_reward = reward / count;
+  // Calculate softmax probability
+  float *probabilities = (float *)calloc(length, sizeof(float));
+  if (probabilities == NULL) {
+    {
+      return NULL;
     }
 
-    // Get the recovery for the arm
-    if (last_sent > 0) {
-      recovery = time->tm_isdst
+    for (int i = 0; i < length; i++) {
+      float e = values[i];
+
+      probabilities[i] = e / sum_exps;
     }
   }
 
-  return NULL;
+  return probabilities;
+}
+
+void update_scores(Arm **arms, int length, char *chosen_arm, int selected,
+                   float alpha, float beta) {
+  // Compute Softwmax probabilities
+  float *probabilities = softmax_probabilities(arms, length, beta);
+
+  // Compute baseline
+  float baseline = 0.0;
+  for (int i = 0; i < length; i++) {
+    baseline += probabilities[i] * arms[i]->reward;
+  }
+
+  // Update the Scores of each arm
+  for (int i = 0; i < length; i++) {
+    Arm *arm = arms[i];
+    if (strcmp(arm->name, chosen_arm) == 0) {
+      // Update based on previous selection
+      arm->reward = alpha * (selected - baseline) * (1 - probabilities[i]);
+    } else {
+      arm->reward = alpha * (selected - baseline) * probabilities[i];
+    }
+  }
 }

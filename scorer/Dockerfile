@@ -18,8 +18,7 @@ RUN pip install -U setuptools
 COPY algorithm/ ./
 
 # Compile the extension
-RUN python setup.py build
-RUN python setup.py install
+RUN pip install .
 
 # Copy app source code
 COPY src/ ./

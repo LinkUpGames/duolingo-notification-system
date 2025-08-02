@@ -1,3 +1,4 @@
-import my_module
+import module
 
-print(my_module.say_hello("Hey"))
+
+print(module.say_hello("Hey"))

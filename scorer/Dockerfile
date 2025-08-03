@@ -8,6 +8,7 @@ RUN apk add --no-cache curl bash
 RUN apk add --no-cache cronie
 RUN apk add --no-cache gcc
 RUN apk add --no-cache musl-dev
+RUN apk add --no-cache make
 
 # Copy Python packages
 COPY requirements.txt ./
@@ -15,10 +16,10 @@ RUN pip install -r requirements.txt
 RUN pip install -U setuptools
 
 # Copy the C extension
-COPY algorithm/ ./
+COPY extensions/ extensions/
 
-# Compile the extension
-RUN pip install .
+# Compile the scorer extension
+RUN cd extensions/algorithm && make
 
 # Copy app source code
 COPY src/ ./
@@ -30,6 +31,5 @@ COPY ./crontab.txt .
 # Make the script an executable
 RUN chmod +x cron.sh
 RUN crontab crontab.txt
-
 
 CMD [ "crond", "-f" ]

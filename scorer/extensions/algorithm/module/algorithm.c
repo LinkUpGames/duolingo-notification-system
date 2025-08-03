@@ -175,10 +175,46 @@ PyObject *return_arms(Arm **arms, int length) {
 
   for (Py_ssize_t i = 0; i < length; i++) {
     PyObject *dict = PyDict_New();
+    Arm *arm = arms[i];
+
     if (!dict) {
       PyErr_NoMemory();
       Py_DECREF(py_list);
     }
+
+    int status;
+
+    // Add the name
+    PyObject *name_obj = PyUnicode_FromString(arm->name);
+    status = PyDict_SetItemString(dict, "name", name_obj);
+
+    if (!name_obj || status == -1) {
+      PyErr_NoMemory();
+      Py_XDECREF(name_obj);
+      Py_DECREF(py_list);
+      Py_DECREF(dict);
+      PyErr_SetString(PyExc_RuntimeError, "Failed to set the 'name'");
+
+      return NULL;
+    }
+    Py_DECREF(name_obj);
+
+    // Add the reward
+    PyObject *reward_obj = PyFloat_FromDouble((double)arm->reward);
+    status = PyDict_SetItemString(dict, "reward", reward_obj);
+
+    if (!reward_obj || status == -1) {
+      PyErr_NoMemory();
+      Py_DECREF(py_list);
+      Py_DECREF(dict);
+      PyErr_SetString(PyExc_RuntimeError, "Failed to set the 'reward'");
+
+      return NULL;
+    }
+    Py_DECREF(reward_obj);
+
+    // Insert the dict into the list
+    PyList_SET_ITEM(py_list, i, dict);
   }
 
   return py_list;

@@ -10,7 +10,7 @@ static PyObject *update_scores_method(PyObject *self, PyObject *args) {
   float temperature;
 
   // Check for the right input
-  if (!PyArg_ParseTuple(args, "O!sidd", &PyList_Type, &input_list, &chosen_arm,
+  if (!PyArg_ParseTuple(args, "O!siff", &PyList_Type, &input_list, &chosen_arm,
                         &selected, &alpha, &temperature)) {
     PyErr_SetString(PyExc_TypeError, "Expected: list, str, int, float, float");
 

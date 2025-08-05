@@ -17,65 +17,16 @@ func SelectNotifcation(user_id string, database *sql.DB, variables *Variables) s
 	notifications := getNotifcationScores(database, user_id, ids)
 
 	// Get the normalized reward for all arms
-	scores := []float32{}
-	var maxScore float32 = -1
-	for _, notification := range notifications {
-		var score float32
-
-		reward, ok := notification["reward"]
-
-		// Parse Value correctly
-		if ok {
-			score = reward.(float32)
-		} else {
-			score = variables.DEFAULT_REWARD
-		}
-
-		if score > maxScore {
-			maxScore = score
-		}
-
-		// Add the scores to the array
-		scores = append(scores, score)
-	}
+	scores, maxScore := normalizeScores(notifications, variables.DEFAULT_REWARD)
 
 	// Compute the time difference for each arm
-	deltas := []float64{}
-	for _, notification := range notifications {
-		now := time.Now().UnixMilli()
-		last_seen, ok := notification["timestamp"].(int64)
-		var delta float64
-
-		if ok {
-			delta = math.Abs(float64(last_seen - now))
-		} else {
-			delta = float64(variables.DEFAULT_DELTA)
-		}
-
-		deltas = append(deltas, delta)
-	}
+	deltas := computeDeltas(notifications, int(variables.DEFAULT_DELTA))
 
 	// Compute Exponentials with Recovering differnce
-	expScores := []float64{}
-	total := 0.0
-	temperature := variables.TEMPERATURE
-
-	for i := 0; i < len(notifications); i++ {
-		normScore := (scores[i] - maxScore) / temperature
-
-		val := float64(normScore) * deltas[i]
-		expScore := math.Exp(val)
-
-		expScores = append(expScores, expScore)
-		total = expScore // Save the total for the average
-	}
+	expScores, total := computeExpScores(scores, deltas, maxScore, variables.TEMPERATURE)
 
 	// Normalize to get the probabilities
-	probabilities := []float64{}
-	for i := 0; i < len(notifications); i++ {
-		val := expScores[i] / total
-		probabilities = append(probabilities, val)
-	}
+	probabilities := computeProbabilities(expScores, total)
 
 	// Sample of arm using a weight probability
 	notificationID := ""
@@ -118,4 +69,87 @@ func getNotifcationScores(database *sql.DB, userID string, notifications []strin
 	results := db.GetEntries(database, query)
 
 	return results
+}
+
+// normalizeScores Normalize the scores for notifications and return a map with the scores per notification
+// and also the maxScore seen from all scores (as a touple)
+func normalizeScores(notifications []map[string]any, def float32) ([]float32, float32) {
+	var maxScore float32 = -1.0
+	scores := []float32{}
+
+	for _, notification := range notifications {
+		var score float32
+
+		reward, ok := notification["reward"]
+
+		if ok {
+			score = reward.(float32)
+		} else {
+			score = def // Set default
+		}
+
+		if score > maxScore {
+			maxScore = score
+		}
+
+		scores = append(scores, score)
+	}
+
+	return scores, maxScore
+}
+
+// computeDeltas Compute the difference between the now and the timestamp of the notification
+func computeDeltas(notifications []map[string]any, def int) []int {
+	now := time.Now().UnixMilli()
+	deltas := []int{}
+
+	for _, notification := range notifications {
+		lastSeen, ok := notification["timestamp"].(int)
+		var delta int
+
+		if ok {
+			diff := lastSeen - int(now)
+			diffAbs := int(math.Abs(float64(diff)))
+
+			delta = diffAbs
+		} else {
+			delta = def
+		}
+
+		deltas = append(deltas, delta)
+	}
+
+	return deltas
+}
+
+// Compute the Exponential recovering difference for the scores
+func computeExpScores(scores []float32, deltas []int, maxScore float32, temperature float32) ([]float64, float64) {
+	expScores := []float64{}
+	total := 0.0
+
+	for i := 0; i < len(scores); i++ {
+		norm := (scores[i] - maxScore) / temperature
+
+		val := float64(norm) * float64(deltas[i])
+
+		score := math.Exp(val)
+		expScores = append(expScores, score)
+
+		total += score
+	}
+
+	return expScores, total
+}
+
+// computeProbabilities Compute the probabilities for all notifications to be sent to the user
+func computeProbabilities(scores []float64, total float64) []float64 {
+	probabilities := []float64{}
+
+	for i := 0; i < len(scores); i++ {
+		val := scores[i] / total
+
+		probabilities = append(probabilities, val)
+	}
+
+	return probabilities
 }

@@ -62,3 +62,95 @@ CREATE TABLE IF NOT EXISTS notifications (
   description TEXT,
   PRIMARY KEY (id)
 );
+
+-- Insert the notifications available to send to the front end
+-- NOTE: I used LLM's to generate random notifications, this is not reflective of any other choice
+INSERT INTO
+  notifications (id, title, description)
+VALUES
+  (
+    'n1',
+    'New Update Available',
+    'A new update for our app is available. Download now.'
+  );
+
+INSERT INTO
+  notifications (id, title, description)
+VALUES
+  (
+    'n2',
+    'Birthday Reminder',
+    'Don’t forget your friend’s birthday!'
+  );
+
+INSERT INTO
+  notifications (id, title, description)
+VALUES
+  (
+    'n3',
+    'Payment Due Soon',
+    'Your next payment is due in 7 days.'
+  );
+
+INSERT INTO
+  notifications (id, title, description)
+VALUES
+  (
+    'n4',
+    'Congratulations!',
+    'We’re happy to announce that you’ve won a prize.'
+  );
+
+INSERT INTO
+  notifications (id, title, description)
+VALUES
+  (
+    'n5',
+    'Event Registration',
+    'Don’t miss out on our upcoming webinar.'
+  );
+
+INSERT INTO
+  notifications (id, title, description)
+VALUES
+  (
+    'n6',
+    'Low Battery Warning',
+    'Battery level is getting low. Please charge your device.'
+  );
+
+INSERT INTO
+  notifications (id, title, description)
+VALUES
+  (
+    'n7',
+    'News Alert',
+    'Check out the latest news and updates from around the world.'
+  );
+
+INSERT INTO
+  notifications (id, title, description)
+VALUES
+  (
+    'n8',
+    'Order Shipped',
+    'Your order has been shipped. Track it here.'
+  );
+
+INSERT INTO
+  notifications (id, title, description)
+VALUES
+  (
+    'n9',
+    'Security Update Required',
+    'Please update your security settings for better protection.'
+  );
+
+INSERT INTO
+  notifications (id, title, description)
+VALUES
+  (
+    'n10',
+    'Appointment Reminder',
+    'Don’t forget your appointment today.'
+  );

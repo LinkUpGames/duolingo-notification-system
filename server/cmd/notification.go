@@ -6,8 +6,11 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"os"
 	"server/db"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // SelectNotifcation Returns the id of the notifcation to send based on the current values
@@ -38,6 +41,12 @@ func SelectNotifcation(user_id string, database *sql.DB, variables *Variables) s
 		if r < cumulative {
 			notificationID = ids[i]
 		}
+	}
+
+	// Log the decision
+	err := addDecisionLog(database, notificationID, user_id)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error with adding log: %s", err.Error())
 	}
 
 	return notificationID
@@ -152,4 +161,19 @@ func computeProbabilities(scores []float64, total float64) []float64 {
 	}
 
 	return probabilities
+}
+
+// addDecisionLog Add the selected notification to the table that saves the decision logs
+func addDecisionLog(db *sql.DB, notification string, user string) error {
+	id := uuid.New()
+	now := time.Now().UnixMilli()
+
+	query := fmt.Sprintf("INSERT INTO DECISIONS (id, user_id, notification_id, timestamp) VALUES(%s, %s, %s, %d);", id, user, notification, now)
+
+	_, err := db.Exec(query)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

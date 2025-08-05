@@ -3,22 +3,22 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"server/cmd"
+	"server/handlers"
 )
 
-const PORT = 8080
-
-func helloHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello, world!")
-}
+var PORT string = os.Getenv("SERVER_PORT")
 
 func main() {
-	cmd.SelectArm()
+	// Setup Context
+	ctx := cmd.SetupContext()
 
-	http.HandleFunc("/", helloHandler)
+	// Handlers
+	http.HandleFunc("/send_notification", handlers.Middleware(ctx, handlers.SendNotificationHandler))
 
 	// Start Server
-	http.ListenAndServe(":8080", nil)
+	http.ListenAndServe(":"+PORT, nil)
 
-	fmt.Printf("Listening on port %d\n", PORT)
+	fmt.Printf("Listening on port %s\n", PORT)
 }

@@ -1,7 +1,7 @@
 services:
-  score:
+  score: # Script
     build: scorer
-  database:
+  database: # Database
     build: database
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
@@ -9,4 +9,9 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "${POSTGRES_PORT}:5432"
+  server: # Base server
+    build: server
+  client: # cli client
+    build: client
+
 

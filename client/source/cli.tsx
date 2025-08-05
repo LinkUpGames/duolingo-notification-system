@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-import React from 'react';
-import {render} from 'ink';
-import meow from 'meow';
-import App from './app.js';
+import React from "react";
+import meow from "meow";
+import App from "./app.js";
+import { withFullScreen } from "fullscreen-ink";
 
 const cli = meow(
-	`
+  `
 	Usage
 	  $ client
 
@@ -16,14 +16,14 @@ const cli = meow(
 	  $ client --name=Jane
 	  Hello, Jane
 `,
-	{
-		importMeta: import.meta,
-		flags: {
-			name: {
-				type: 'string',
-			},
-		},
-	},
+  {
+    importMeta: import.meta,
+    flags: {
+      name: {
+        type: "string",
+      },
+    },
+  }
 );
 
-render(<App name={cli.flags.name} />);
+withFullScreen(<App name={cli.flags.name} />).start();

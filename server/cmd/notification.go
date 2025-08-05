@@ -78,9 +78,18 @@ func SelectNotifcation(user_id string, database *sql.DB, variables *Variables) s
 	}
 
 	// Sample of arm using a weight probability
+	notificationID := ""
 	r := rand.Float64()
+	cumulative := 0.0
+	for i, p := range probabilities {
+		cumulative += p
 
-	return ""
+		if r < cumulative {
+			notificationID = ids[i]
+		}
+	}
+
+	return notificationID
 }
 
 // getNotificationIds Get the ids of all the notifications from the database

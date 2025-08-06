@@ -1,5 +1,5 @@
-import { Box } from "ink";
-import React, { useContext, useEffect } from "react";
+import { Box, Text } from "ink";
+import React, { useContext, useEffect, useState } from "react";
 import Notify, { type Notification } from "../notification/notification.js";
 import { AppContext, useFetch } from "../../utils.js";
 
@@ -8,17 +8,30 @@ import { AppContext, useFetch } from "../../utils.js";
  */
 const Main = () => {
   const { server } = useContext(AppContext);
-  const { fetch, loading, data } = useFetch(server);
+  const { fetch, loading, data } = useFetch<Notification>(server); // Fetch the notification
 
+  // STATES
+  const [notification, setNotification] = useState<Notification | null>(null); // The notification fetched from the backend
+
+  // FUNCTIONS
+  /**
+   * Fetch a notification from the database based on the algorithm
+   */
+  const fetchNotification = async () => {
+    try {
+      const result = await fetch("send_notification&user_id=1233");
+
+      setNotification(result);
+    } catch {}
+  };
+
+  // EFFECTS
   /**
    * On an initial render, fetch the notification data first
    */
-  useEffect(() => {}, []);
-
-  const notification: Notification = {
-    title: "This is a title",
-    description: "This is a description",
-  };
+  useEffect(() => {
+    fetchNotification();
+  }, []);
 
   return (
     <Box
@@ -30,7 +43,11 @@ const Main = () => {
       borderStyle="round"
       borderColor="red"
     >
-      <Notify notification={notification} />
+      {notification ? (
+        <Notify notification={notification} />
+      ) : (
+        <Text> No Notification</Text>
+      )}
     </Box>
   );
 };

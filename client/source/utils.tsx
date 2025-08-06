@@ -22,7 +22,7 @@ export const useSetup = () => {
   const server = useMemo(() => {
     const port = process.env["SERVER_PORT"];
 
-    return `http://localhost:${port}`;
+    return `http://server:${port}`;
   }, []);
 
   return {
@@ -36,27 +36,34 @@ export const useSetup = () => {
 /**
  * Expose api to fetch and post notification stuff
  */
-export const useFetch = (host: string) => {
+export const useFetch = <T = unknown,>(host: string) => {
   // STATES
   const [loading, setLoading] = useState<boolean>(false); // controll whether the user has requested a fetch or not
-  const [data, setData] = useState<unknown | null>(null); // The data that we fetched
+  const [data, setData] = useState<T | null>(null); // The data that we fetched
 
   // FUNCTIONS
   /**
    * Fetch information from the backend based on the route we want
    */
-  const fetch = async (route: string) => {
+  const fetch = async (route: string): Promise<T | null> => {
+    let data: T | null = null;
+
     const url = `${host}/${route}`;
+
     try {
       setLoading(true);
       const response = await axios.get<string>(url);
       setLoading(false);
-      setData(response.data);
+      setData(response.data as T);
+
+      data = response.data as T;
 
       console.log("Data: ", response.data);
     } catch (error) {
       console.error("Error fetching: ", error);
     }
+
+    return data;
   };
 
   return {

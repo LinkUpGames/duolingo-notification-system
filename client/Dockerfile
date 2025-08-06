@@ -4,7 +4,6 @@ WORKDIR /app
 
 # Copy the necessary files
 COPY package.json package.json
-COPY package-lock.json package-lock.json
 COPY tsconfig.json tsconfig.json
 COPY source/ source/
 
@@ -12,4 +11,4 @@ COPY source/ source/
 RUN npm install
 
 # Start frontend
-CMD [ "npm run app:test" ]
+CMD [ "npm" ,"run","app:test" ]

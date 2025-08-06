@@ -12,31 +12,34 @@ import (
 
 // SelectNotifcation Returns the id of the notifcation to send based on the current values
 func SelectNotifcation(userID string, variables *cmd.Variables, db *db.DB) string {
-	// Fetch the Score of the notifications
-	ids := getNotificationIds(db)
-	notifications := getNotifcationScores(db, userID)
+	// Fetch the notifications and the scores for this user
+	notifications := getUserNotifications(userID, db, variables)
 
-	// Get the normalized reward for all arms
-	scores, maxScore := normalizeScores(notifications, variables.DEFAULT_REWARD)
+	// Get the max score
+	var maxScore float64 = 0
+	for _, notification := range notifications {
+		score := notification.Score
 
-	// Compute the time difference for each arm
-	deltas := computeDeltas(notifications, int(variables.DEFAULT_DELTA))
+		if score > maxScore {
+			maxScore = score
+		}
+	}
 
 	// Compute Exponentials with Recovering differnce
-	expScores, total := computeExpScores(scores, deltas, maxScore, variables.TEMPERATURE)
+	total := computeExpScores(notifications, float64(variables.TEMPERATURE), maxScore)
 
 	// Normalize to get the probabilities
-	probabilities := computeProbabilities(expScores, total)
+	computeProbabilities(notifications, total)
 
-	// Sample of arm using a weight probability
+	// Sample an arm using a weight probability
 	notificationID := ""
 	r := rand.Float64()
 	cumulative := 0.0
-	for i, p := range probabilities {
-		cumulative += p
+	for _, notification := range notifications {
+		cumulative += notification.Probability
 
 		if r < cumulative {
-			notificationID = ids[i]
+			notificationID = notification.ID
 		}
 	}
 

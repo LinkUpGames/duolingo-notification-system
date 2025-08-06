@@ -1,6 +1,6 @@
 -- Create the Scores table at the beggining
 CREATE TABLE IF NOT EXISTS scores (
-  id TEXT, -- The id of the notification
+  id TEXT NOT NULL, -- The id of the notification
   user_id TEXT, -- The user id that is used for querying
   reward FLOAT NOT NULL, -- The score for this notification
   selected INT NOT NULL, -- The amount of times that the notification was selected
@@ -13,11 +13,7 @@ CREATE TABLE IF NOT EXISTS scores (
 CREATE INDEX IF NOT EXISTS GSI_scores_user ON scores (user_id);
 
 -- Create the users table
-CREATE TABLE IF NOT EXISTS users (
-  id TEXT PRIMARY KEY,
-  score_id TEXT, -- The 
-  FOREIGN KEY (score_id, id) REFERENCES scores (id, user_id)
-);
+CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY NOT NULL, name TEXT NOT NULL);
 
 -- Decision Logs after the selector chooses a notification to change
 CREATE TABLE IF NOT EXISTS decisions (

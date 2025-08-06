@@ -1,56 +1,14 @@
-// Package cmd is still in progress
-package cmd
+package notifications
 
 import (
 	"database/sql"
 	"fmt"
 	"math"
-	"math/rand"
-	"os"
 	"server/db"
 	"time"
 
 	"github.com/google/uuid"
 )
-
-// SelectNotifcation Returns the id of the notifcation to send based on the current values
-func SelectNotifcation(user_id string, database *sql.DB, variables *Variables) string {
-	// Fetch the Score of the notifications
-	ids := getNotificationIds(database)
-	notifications := getNotifcationScores(database, user_id, ids)
-
-	// Get the normalized reward for all arms
-	scores, maxScore := normalizeScores(notifications, variables.DEFAULT_REWARD)
-
-	// Compute the time difference for each arm
-	deltas := computeDeltas(notifications, int(variables.DEFAULT_DELTA))
-
-	// Compute Exponentials with Recovering differnce
-	expScores, total := computeExpScores(scores, deltas, maxScore, variables.TEMPERATURE)
-
-	// Normalize to get the probabilities
-	probabilities := computeProbabilities(expScores, total)
-
-	// Sample of arm using a weight probability
-	notificationID := ""
-	r := rand.Float64()
-	cumulative := 0.0
-	for i, p := range probabilities {
-		cumulative += p
-
-		if r < cumulative {
-			notificationID = ids[i]
-		}
-	}
-
-	// Log the decision
-	err := addDecisionLog(database, notificationID, user_id)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error with adding log: %s", err.Error())
-	}
-
-	return notificationID
-}
 
 // getNotificationIds Get the ids of all the notifications from the database
 func getNotificationIds(database *sql.DB) []string {
@@ -165,7 +123,7 @@ func computeProbabilities(scores []float64, total float64) []float64 {
 
 // addDecisionLog Add the selected notification to the table that saves the decision logs
 func addDecisionLog(db *sql.DB, notification string, user string) error {
-	id := uuid.New()
+	id := uuid.New().String()
 	now := time.Now().UnixMilli()
 
 	query := fmt.Sprintf("INSERT INTO DECISIONS (id, user_id, notification_id, timestamp) VALUES(%s, %s, %s, %d);", id, user, notification, now)

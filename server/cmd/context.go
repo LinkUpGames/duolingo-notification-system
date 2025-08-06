@@ -6,8 +6,10 @@ import (
 )
 
 // Context keys
+type key int
+
 const (
-	DATABASE = iota
+	DATABASE key = iota
 	VARIABLES
 )
 
@@ -21,13 +23,13 @@ type AppContext struct {
 func SetupContext() *AppContext {
 	ctx := context.Background()
 
-	// Setup the database
-	db := db.SetupDatabase()
-	ctx = context.WithValue(ctx, DATABASE, db)
-
 	// Setup Variables
 	v := SetupEnvironment()
 	ctx = context.WithValue(ctx, VARIABLES, v)
+
+	// Setup the database
+	db := db.Database(v.POSTGRES_DB, v.POSTGRES_USER, v.POSTGRES_PASSWORD, v.POSTGRES_PORT)
+	ctx = context.WithValue(ctx, DATABASE, db)
 
 	return &AppContext{
 		Ctx: ctx,

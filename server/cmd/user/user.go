@@ -2,7 +2,6 @@
 package user
 
 import (
-	"database/sql"
 	"fmt"
 	"server/db"
 
@@ -10,10 +9,10 @@ import (
 )
 
 // GetUser Get the user given the id
-func GetUser(database *sql.DB, id string) map[string]any {
-	query := fmt.Sprintf("SELECT * FROM users WHERE id = %d", id)
+func GetUser(db *db.DB, id string) map[string]any {
+	query := fmt.Sprintf("SELECT * FROM users WHERE id = %s", id)
 
-	user := db.GetEntry(database, query)
+	user := db.GetEntry(query)
 
 	_, ok := user["id"]
 
@@ -24,9 +23,11 @@ func GetUser(database *sql.DB, id string) map[string]any {
 	}
 }
 
-func SetUser(database *sql.DB, name string) map[string]any {
+func SetUser(db *db.DB, name string) (string, bool) {
 	id := uuid.New().String()
 	query := fmt.Sprintf("INSERT INTO users(id, name) WHERE (%s, %s);", id, name)
 
-	// db.
+	status := db.SetEntry(query)
+
+	return id, status
 }

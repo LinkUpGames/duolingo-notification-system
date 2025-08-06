@@ -1,7 +1,7 @@
 package notifications
 
 import (
-	"database/sql"
+	"errors"
 	"fmt"
 	"math"
 	"server/db"
@@ -11,12 +11,12 @@ import (
 )
 
 // getNotificationIds Get the ids of all the notifications from the database
-func getNotificationIds(database *sql.DB) []string {
+func getNotificationIds(db *db.DB) []string {
 	ids := []string{}
 
-	query := "SELECT ID FROM NOTIFICATIONS"
+	query := "SELECT ID FROM notifications"
 
-	notifications := db.GetEntries(database, query)
+	notifications := db.GetEntries(query)
 
 	for _, notification := range notifications {
 		id, ok := notification["id"]
@@ -29,11 +29,26 @@ func getNotificationIds(database *sql.DB) []string {
 	return ids
 }
 
-// getNotifcationScores Get the scores for the notifications stored from the database
-func getNotifcationScores(database *sql.DB, userID string, notifications []string) []map[string]any {
-	query := fmt.Sprintf("SELECT * FROM scores WHERE user_id = %d", userID)
+// getNotification Get a notification given the id
+func getNotification(id string, db *db.DB) map[string]any {
+	query := fmt.Sprintf("SELECT ID FROM NOTIFICATIONS WHERE ID = %s", id)
 
-	results := db.GetEntries(database, query)
+	notification := db.GetEntry(query)
+
+	_, ok := notification["id"].(string)
+
+	if !ok {
+		return nil
+	}
+
+	return notification
+}
+
+// getNotifcationScores Get the scores for the notifications stored from the database
+func getNotifcationScores(db *db.DB, userID string) []map[string]any {
+	query := fmt.Sprintf("SELECT * FROM scores WHERE user_id = %s", userID)
+
+	results := db.GetEntries(query)
 
 	return results
 }
@@ -94,7 +109,7 @@ func computeExpScores(scores []float32, deltas []int, maxScore float32, temperat
 	expScores := []float64{}
 	total := 0.0
 
-	for i := 0; i < len(scores); i++ {
+	for i := range scores {
 		norm := (scores[i] - maxScore) / temperature
 
 		val := float64(norm) * float64(deltas[i])
@@ -112,7 +127,7 @@ func computeExpScores(scores []float32, deltas []int, maxScore float32, temperat
 func computeProbabilities(scores []float64, total float64) []float64 {
 	probabilities := []float64{}
 
-	for i := 0; i < len(scores); i++ {
+	for i := range scores {
 		val := scores[i] / total
 
 		probabilities = append(probabilities, val)
@@ -122,15 +137,16 @@ func computeProbabilities(scores []float64, total float64) []float64 {
 }
 
 // addDecisionLog Add the selected notification to the table that saves the decision logs
-func addDecisionLog(db *sql.DB, notification string, user string) error {
+func addDecisionLog(db *db.DB, notification string, user string) error {
 	id := uuid.New().String()
 	now := time.Now().UnixMilli()
 
 	query := fmt.Sprintf("INSERT INTO DECISIONS (id, user_id, notification_id, timestamp) VALUES(%s, %s, %s, %d);", id, user, notification, now)
 
-	_, err := db.Exec(query)
-	if err != nil {
-		return err
+	err := db.SetEntry(query)
+
+	if err {
+		return errors.New("error instering decision log")
 	}
 
 	return nil

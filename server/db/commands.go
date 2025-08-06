@@ -1,14 +1,11 @@
 package db
 
-import (
-	"database/sql"
-)
-
 // GetEntries Get multiple entries from the database based on the query
-func GetEntries(db *sql.DB, query string) []map[string]any {
+func (db *DB) GetEntries(query string) []map[string]any {
 	results := []map[string]any{}
+	database := db.client
 
-	rows, err := db.Query(query)
+	rows, err := database.Query(query)
 	if err != nil {
 		return results
 	}
@@ -47,10 +44,10 @@ func GetEntries(db *sql.DB, query string) []map[string]any {
 }
 
 // GetEntry Get one single entry from the database
-func GetEntry(db *sql.DB, query string) map[string]any {
+func (db *DB) GetEntry(query string) map[string]any {
 	var result map[string]any
 
-	results := getEntries(db, query)
+	results := db.GetEntries(query)
 
 	if len(results) > 0 {
 		result = results[0]
@@ -59,4 +56,12 @@ func GetEntry(db *sql.DB, query string) map[string]any {
 	}
 
 	return result
+}
+
+func (db *DB) SetEntry(query string) bool {
+	client := db.client
+
+	_, err := client.Exec(query)
+
+	return err == nil
 }

@@ -2,18 +2,19 @@
 package notifications
 
 import (
-	"database/sql"
 	"fmt"
 	"math/rand"
 	"os"
 	"server/cmd"
+	"server/cmd/user"
+	"server/db"
 )
 
 // SelectNotifcation Returns the id of the notifcation to send based on the current values
-func SelectNotifcation(user_id string, database *sql.DB, variables *cmd.Variables) string {
+func SelectNotifcation(userID string, variables *cmd.Variables, db *db.DB) string {
 	// Fetch the Score of the notifications
-	ids := getNotificationIds(database)
-	notifications := getNotifcationScores(database, user_id, ids)
+	ids := getNotificationIds(db)
+	notifications := getNotifcationScores(db, userID)
 
 	// Get the normalized reward for all arms
 	scores, maxScore := normalizeScores(notifications, variables.DEFAULT_REWARD)
@@ -40,7 +41,7 @@ func SelectNotifcation(user_id string, database *sql.DB, variables *cmd.Variable
 	}
 
 	// Log the decision
-	err := addDecisionLog(database, notificationID, user_id)
+	err := addDecisionLog(db, notificationID, userID)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error with adding log: %s", err.Error())
 	}
@@ -49,6 +50,21 @@ func SelectNotifcation(user_id string, database *sql.DB, variables *cmd.Variable
 }
 
 // SendNotifcation Send a notification to the user given their id
-func SendNotifcation(user_id string, notification_id string) {
+func SendNotifcation(userID string, notificationID string, db *db.DB) map[string]any {
+	var id string
+
 	// Check if the user exists
+	u := user.GetUser(db, userID)
+
+	// Create the user if they don't exist
+	if u == nil {
+		id, _ = user.SetUser(db, userID+"cool-beans") // This should change later with an actual user name
+	} else {
+		id, _ = u["id"].(string)
+	}
+
+	// Fetch the nofication
+	notification := getNotification(id, db)
+
+	return notification
 }

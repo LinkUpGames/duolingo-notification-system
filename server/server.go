@@ -18,7 +18,6 @@ func main() {
 	http.HandleFunc("/send_notification", handlers.Middleware(ctx, handlers.SendNotificationHandler))
 
 	// Start Server
-	http.ListenAndServe(":"+PORT, nil)
-
 	fmt.Printf("Listening on port %s\n", PORT)
+	http.ListenAndServe(":"+PORT, nil)
 }

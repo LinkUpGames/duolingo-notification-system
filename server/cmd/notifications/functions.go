@@ -15,8 +15,6 @@ func SelectNotifcation(userID string, variables *cmd.Variables, db *db.DB) *Noti
 	// Fetch the notifications and the scores for this user
 	notifications := getUserNotifications(userID, db, variables)
 
-	fmt.Printf("Notifications: %s", notifications)
-
 	// Get the max score
 	var maxScore float64 = 0
 	for _, notification := range notifications {

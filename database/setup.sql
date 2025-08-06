@@ -1,3 +1,11 @@
+-- Notifications
+CREATE TABLE IF NOT EXISTS notifications (
+  id TEXT,
+  title TEXT,
+  description TEXT,
+  PRIMARY KEY (id)
+);
+
 -- Create the Scores table at the beggining
 CREATE TABLE IF NOT EXISTS scores (
   id TEXT NOT NULL, -- The id of the notification
@@ -17,7 +25,7 @@ CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY NOT NULL, name TEXT NOT NU
 
 -- Decision Logs after the selector chooses a notification to change
 CREATE TABLE IF NOT EXISTS decisions (
-  id TEXT NOT NULL, -- The id of the decision log
+  id TEXT UNIQUE NOT NULL, -- The id of the decision log
   user_id TEXT NOT NULL, -- User id
   notification_id TEXT NOT NULL, -- The id of the notification that was selected
   timestamp BIGINT NOT NULL, -- the epoch timestamp of when the decision was made
@@ -26,12 +34,15 @@ CREATE TABLE IF NOT EXISTS decisions (
   FOREIGN KEY (notification_id) REFERENCES notifications (id)
 );
 
+CREATE INDEX IF NOT EXISTS GSI_decisions_id ON decisions (id);
+
 CREATE INDEX IF NOT EXISTS GSI_decisions_timestamp ON decisions (timestamp);
 
 -- The probabilities for all notifications based on a timestamp
 CREATE TABLE IF NOT EXISTS probabilities (
-  id TEXT PRIMARY KEY,
+  id TEXT NOT NULL,
   decision_id TEXT NOT NULL, -- decision log 
+  user_id TEXT NOT NULL, -- The user
   notification_id TEXT NOT NULL, -- the notification id
   probability FLOAT NOT NULL,
   PRIMARY KEY (id),
@@ -50,14 +61,6 @@ CREATE TABLE IF NOT EXISTS events (
 );
 
 CREATE INDEX IF NOT EXISTS GSI_events_user_id ON events (user_id);
-
--- Notifications
-CREATE TABLE IF NOT EXISTS notifications (
-  id TEXT,
-  title TEXT,
-  description TEXT,
-  PRIMARY KEY (id)
-);
 
 -- Insert the notifications available to send to the front end
 -- NOTE: I used LLM's to generate random notifications, this is not reflective of any other choice

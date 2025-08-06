@@ -2,7 +2,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 	"server/cmd"
 	"server/cmd/notifications"
@@ -20,20 +19,18 @@ func Middleware(ctx *cmd.AppContext, handler Handler) http.HandlerFunc {
 
 // SendNotificationHandler Select an arm based on the user
 func SendNotificationHandler(ctx *cmd.AppContext, w http.ResponseWriter, r *http.Request) {
+	// Get Parameters
 	userID := r.URL.Query().Get("user_id")
 
+	// Context
 	variables := ctx.Ctx.Value(cmd.VARIABLES).(*cmd.Variables)
 	db := ctx.Ctx.Value(cmd.DATABASE).(*db.DB)
 
 	// Select a notification
-	id := notifications.SelectNotifcation(userID, variables, db)
+	notification := notifications.SelectNotifcation(userID, variables, db)
+	marhal := notifications.MarshalNotification(notification)
 
-	notification := notifications.SendNotifcation(userID, id, db)
-
-	jsonBytes, err := json.Marshal(notification)
-
-	if notification == nil || err != nil {
-
+	if marhal == nil {
 		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusExpectationFailed)
 
@@ -44,6 +41,6 @@ func SendNotificationHandler(ctx *cmd.AppContext, w http.ResponseWriter, r *http
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 
-		w.Write(jsonBytes)
+		w.Write(marhal)
 	}
 }

@@ -2,18 +2,20 @@
 package notifications
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"os"
 	"server/cmd"
-	"server/cmd/user"
 	"server/db"
 )
 
 // SelectNotifcation Returns the id of the notifcation to send based on the current values
-func SelectNotifcation(userID string, variables *cmd.Variables, db *db.DB) string {
+func SelectNotifcation(userID string, variables *cmd.Variables, db *db.DB) *Notification {
 	// Fetch the notifications and the scores for this user
 	notifications := getUserNotifications(userID, db, variables)
+
+	fmt.Printf("Notifications: %s", notifications)
 
 	// Get the max score
 	var maxScore float64 = 0
@@ -32,42 +34,32 @@ func SelectNotifcation(userID string, variables *cmd.Variables, db *db.DB) strin
 	computeProbabilities(notifications, total)
 
 	// Sample an arm using a weight probability
-	notificationID := ""
+	var notification *Notification = nil
 	r := rand.Float64()
 	cumulative := 0.0
-	for _, notification := range notifications {
-		cumulative += notification.Probability
+	for _, _notification := range notifications {
+		cumulative += _notification.Probability
 
 		if r < cumulative {
-			notificationID = notification.ID
+			notification = _notification
 		}
 	}
 
 	// Log the decision
-	err := addDecisionLog(db, notificationID, userID)
+	err := addDecisionLog(db, notification.ID, userID)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error with adding log: %s", err.Error())
 	}
 
-	return notificationID
+	return notification
 }
 
-// SendNotifcation Send a notification to the user given their id
-func SendNotifcation(userID string, notificationID string, db *db.DB) map[string]any {
-	var id string
-
-	// Check if the user exists
-	u := user.GetUser(db, userID)
-
-	// Create the user if they don't exist
-	if u == nil {
-		id, _ = user.SetUser(db, userID+"cool-beans") // This should change later with an actual user name
-	} else {
-		id, _ = u["id"].(string)
+// MarshalNotification Send a notification to the user given their id by marshalling the struct and turning it into a json string
+func MarshalNotification(notification *Notification) []byte {
+	jsonBytes, err := json.Marshal(notification)
+	if err != nil {
+		return nil
 	}
 
-	// Fetch the nofication
-	notification := getNotification(id, db)
-
-	return notification
+	return jsonBytes
 }

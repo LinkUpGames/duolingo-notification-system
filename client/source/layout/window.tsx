@@ -24,7 +24,15 @@ type Props = {
  */
 const Window = ({ children, width, height }: Props) => {
   return (
-    <Box width={width} height={height} padding={1} borderStyle="single">
+    <Box
+      width={width}
+      height={height}
+      padding={1}
+      borderStyle="single"
+      flexDirection="row"
+      justifyContent="space-between"
+      gap={2}
+    >
       {children}
     </Box>
   );

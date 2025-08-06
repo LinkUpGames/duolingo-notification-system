@@ -14,7 +14,7 @@ const Sidebar = ({ width }: Props) => {
       height="100%"
       width={width}
       borderColor="green"
-      borderStyle="double"
+      borderStyle="round"
     ></Box>
   );
 };

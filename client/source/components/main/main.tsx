@@ -1,11 +1,20 @@
 import { Box } from "ink";
-import React from "react";
+import React, { useContext, useEffect } from "react";
 import Notify, { type Notification } from "../notification/notification.js";
+import { AppContext, useFetch } from "../../utils.js";
 
 /**
  * The main area
  */
 const Main = () => {
+  const { server } = useContext(AppContext);
+  const { fetch, loading, data } = useFetch(server);
+
+  /**
+   * On an initial render, fetch the notification data first
+   */
+  useEffect(() => {}, []);
+
   const notification: Notification = {
     title: "This is a title",
     description: "This is a description",

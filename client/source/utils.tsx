@@ -1,12 +1,5 @@
 import axios from "axios";
-import { Box, Text } from "ink";
-import React, {
-  createContext,
-  JSX,
-  useContext,
-  useMemo,
-  useState,
-} from "react";
+import { createContext, useMemo, useState } from "react";
 
 type AppContextProps = {
   /**
@@ -23,8 +16,6 @@ export const AppContext = createContext<AppContextProps>({
  * Setup the client frontend based on what we are doing
  */
 export const useSetup = () => {
-  const { server: host } = useContext(AppContext);
-
   /**
    * The url for the server
    */
@@ -47,7 +38,8 @@ export const useSetup = () => {
  */
 export const useFetch = (host: string) => {
   // STATES
-  const [fetched, setFetched] = useState<boolean>(false); // controle whether the user has requested a fetch or not
+  const [loading, setLoading] = useState<boolean>(false); // controll whether the user has requested a fetch or not
+  const [data, setData] = useState<unknown | null>(null); // The data that we fetched
 
   // FUNCTIONS
   /**
@@ -56,11 +48,31 @@ export const useFetch = (host: string) => {
   const fetch = async (route: string) => {
     const url = `${host}/${route}`;
     try {
+      setLoading(true);
       const response = await axios.get<string>(url);
+      setLoading(false);
+      setData(response.data);
 
       console.log("Data: ", response.data);
     } catch (error) {
       console.error("Error fetching: ", error);
     }
+  };
+
+  return {
+    /**
+     * Fetch information rom the bakend bvased on the route we want
+     */
+    fetch: fetch,
+
+    /**
+     * Whether the data is waiting to loading or not
+     */
+    loading: loading,
+
+    /**
+     * The data that was fetched
+     */
+    data: data,
   };
 };

@@ -19,7 +19,7 @@ const Main = () => {
    */
   const fetchNotification = async () => {
     try {
-      const result = await fetch("send_notification&user_id=1233");
+      const result = await fetch("send_notification?user_id=1233");
 
       setNotification(result);
     } catch {}

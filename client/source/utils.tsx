@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { createContext, useMemo, useState } from "react";
 import Logger from "./logs.js";
 
@@ -53,15 +53,24 @@ export const useFetch = <T = unknown,>(host: string) => {
 
     try {
       setLoading(true);
-      const response = await axios.get<string>(url);
+      const response = await axios.get<T>(url);
       setLoading(false);
+
       setData(response.data as T);
 
       data = response.data as T;
 
-      Logger.info("Data", { message: response.data });
+      Logger.log({ level: "info", message: data as string });
     } catch (error) {
-      Logger.log({ level: "error", message: error as string });
+      if (error instanceof AxiosError) {
+        Logger.log({ level: "error", message: `Cause: ${error.cause}` });
+        Logger.log({ level: "error", message: `Code: ${error.code}` });
+        Logger.log({ level: "error", message: `Data: ${error.message}` });
+        Logger.log({
+          level: "error",
+          message: `Request: ${error.request}`,
+        });
+      }
     }
 
     return data;

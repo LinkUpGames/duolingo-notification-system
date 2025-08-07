@@ -20,8 +20,7 @@ type Notification struct {
 	Timestamp   int     `json:"timestamp"`
 	Selected    int     `json:"selected"`
 	Probability float64 `json:"probability"`
-
-	Delta int
+	Delta       int     `json:"-"`
 }
 
 // getNotificationIds Get the ids of all the notifications from the database
@@ -155,7 +154,7 @@ func getUserNotifications(userID string, db *db.DB, variables *cmd.Variables) []
 
 // printNotifications Prints the notification as a json string, each on a line
 func printNotifications(notifications []*Notification) {
-	fmt.Print("\n---Notifications---")
+	fmt.Print("\n\n---Notifications---")
 	for _, notification := range notifications {
 
 		marshal := MarshalNotification(notification)
@@ -163,7 +162,7 @@ func printNotifications(notifications []*Notification) {
 
 		fmt.Printf("\nNotification: %s\n", content)
 	}
-	fmt.Print("---Notifications---\n")
+	fmt.Print("---Notifications---\n\n")
 }
 
 // selectRandom Select a notification at random given the weighted probability of each notification

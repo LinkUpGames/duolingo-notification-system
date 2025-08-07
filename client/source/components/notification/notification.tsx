@@ -2,6 +2,7 @@ import { Box, Text } from "ink";
 import BigText from "ink-big-text";
 import Gradient from "ink-gradient";
 import React from "react";
+import Logger from "../../logs.js";
 
 /**
  * The notification gathered from the backend
@@ -16,6 +17,26 @@ export type Notification = {
    * Text about the notificaiton
    */
   description: string;
+
+  /**
+   * Notificaiton id
+   */
+  id: string;
+
+  /**
+   * The score for the notification
+   */
+  score: number;
+
+  /**
+   * The millisecond timestamp
+   */
+  timestamp: string;
+
+  /**
+   * The probability that this notificaiton was selected
+   */
+  probability: number;
 };
 
 type Props = {
@@ -29,6 +50,11 @@ type Props = {
  * Notification to display
  */
 const Notification = ({ notification }: Props) => {
+  Logger.log({
+    level: "info",
+    message: `Notification: ${JSON.stringify(notification)}`,
+  });
+
   return (
     <Box
       borderStyle="round"

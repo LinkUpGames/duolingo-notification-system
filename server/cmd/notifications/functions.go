@@ -35,9 +35,8 @@ func SelectNotifcation(userID string, variables *cmd.Variables, db *db.DB) *Noti
 	var notification *Notification = nil
 	r := rand.Float64()
 
-	fmt.Printf("Random Number: %f\n", r)
-
 	cumulative := 0.0
+	printNotifications(notifications)
 	for _, _notification := range notifications {
 		cumulative += _notification.Probability
 

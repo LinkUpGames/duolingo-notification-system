@@ -151,3 +151,14 @@ func getUserNotifications(userID string, db *db.DB, variables *cmd.Variables) []
 
 	return notifications
 }
+
+// printNotifications Prints the notification as a json string, each on a line
+func printNotifications(notifications []*Notification) {
+	for _, notification := range notifications {
+
+		marshal := MarshalNotification(notification)
+		content := string(marshal)
+
+		fmt.Printf("\nNotification: %s\n", content)
+	}
+}

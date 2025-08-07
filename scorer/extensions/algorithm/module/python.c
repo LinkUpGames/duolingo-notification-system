@@ -1,41 +1,49 @@
 #define PY_SSIZE_T_CLEAN
 #include "algorithm.h"
+#include "decision.h"
+#include "notification.h"
 #include <Python.h>
 
-static PyObject *update_scores_method(PyObject *self, PyObject *args) {
-  PyObject *input_list;
-  const char *chosen_arm;
-  int selected;
-  float alpha;
-  float temperature;
+/**
+ * Wrapper for the python method that computes the scores given a list of
+ * decision logs
+ * @param self The calling object
+ * @param args The argument list
+ */
+static PyObject *compute_scores_method(PyObject *self, PyObject *args) {
+  PyObject *decision_list_obj;
+  PyObject *notification_list_obj;
 
-  // Check for the right input
-  if (!PyArg_ParseTuple(args, "O!siff", &PyList_Type, &input_list, &chosen_arm,
-                        &selected, &alpha, &temperature)) {
-    PyErr_SetString(PyExc_TypeError, "Expected: list, str, int, float, float");
+  // Parse arguments
+  if (!PyArg_ParseTuple(args, "O!O!", &PyList_Type, &decision_list_obj,
+                        &PyList_Type, &notification_list_obj)) {
+    PyErr_SetString(PyExc_TypeError,
+                    "Expected: list[Decision], list[Notifications]");
 
-    return NULL;
+    // Return null
+    Py_RETURN_NONE;
   }
 
-  Py_ssize_t list_size = PyList_Size(input_list);
+  // Parse the list
+  DecisionArray *decisions = parse_python_decision_list(decision_list_obj);
+  NotificationArray *notifications =
+      parse_python_notification_list(notification_list_obj);
 
-  // Parse the input
-  Arm **arms = parse_python_input(input_list, list_size);
+  // Compute Scores
+  compute_scores(decisions, notifications);
 
-  // Update The scores
-  update_scores(arms, list_size, chosen_arm, selected, alpha, temperature);
+  PyObject *notification_result =
+      notification_list_to_python_list(notifications);
 
-  PyObject *list = return_arms(arms, list_size);
+  free_decision_list(decisions);
+  free_notification_list(notifications);
 
-  // Free memory
-  free_arm_list(arms, list_size);
-
-  return list;
+  return notification_result;
 }
 
 static PyMethodDef scorer_methods[] = {
-    {"update_scores", update_scores_method, METH_VARARGS,
-     "Print hello message."},
+    {"compute_scores", compute_scores_method, METH_VARARGS,
+     "Compute the scores for the notification given a list of decisions"},
     {NULL, NULL, 0, NULL},
 };
 

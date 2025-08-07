@@ -1,27 +1,161 @@
-from scorer import update_scores
+from scorer import compute_scores
 
-# List of "arms", each with a name and initial reward
-arms: list = [
-    {"name": "foo", "reward": 0.1},
-    {"name": "bar", "reward": 0.5},
-    {"name": "baz", "reward": 0.9},
+decisions = [
+    {
+        "id": "bb7f874a-de3f-4238-b524-97d54e55049f",
+        "user_id": "1233",
+        "notification_id": "n10",
+        "timestamp": 1754933991579,
+        "probabilities": {
+            "n1": 0.1,
+            "n2": 0.1,
+            "n3": 0.1,
+            "n4": 0.1,
+            "n5": 0.1,
+            "n6": 0.1,
+            "n7": 0.1,
+            "n8": 0.1,
+            "n9": 0.1,
+            "n10": 0.1,
+        },
+        "selected": True,
+        "response_timestamp": 1754933992942,
+    },
+    {
+        "id": "ddee7998-4916-4bd5-a568-6f4eab660215",
+        "user_id": "1233",
+        "notification_id": "n10",
+        "timestamp": 1754933993047,
+        "probabilities": {
+            "n1": 0.1,
+            "n2": 0.1,
+            "n3": 0.1,
+            "n4": 0.1,
+            "n5": 0.1,
+            "n6": 0.1,
+            "n7": 0.1,
+            "n8": 0.1,
+            "n9": 0.1,
+            "n10": 0.1,
+        },
+        "selected": True,
+        "response_timestamp": 1754933992942,
+    },
 ]
 
-# Name of the arm that was selected
-chosen_arm = "bar"
+notifications = [
+    {
+        "id": "n1",
+        "user_id": "1233",
+        "score": 0,
+        "timestamp": -1,
+        "selected": 0,
+        "probability": 0,
+        "title": "New Update Available",
+        "description": "A new update for our app is available. Download now.",
+        "decision_id": "",
+    },
+    {
+        "id": "n2",
+        "user_id": "1233",
+        "score": 0,
+        "timestamp": -1,
+        "selected": 0,
+        "probability": 0,
+        "title": "Birthday Reminder",
+        "description": "Don’t forget your friend’s birthday!",
+        "decision_id": "",
+    },
+    {
+        "id": "n3",
+        "user_id": "1233",
+        "score": 0,
+        "timestamp": -1,
+        "selected": 0,
+        "probability": 0,
+        "title": "Payment Due Soon",
+        "description": "Your next payment is due in 7 days.",
+        "decision_id": "",
+    },
+    {
+        "id": "n4",
+        "user_id": "1233",
+        "score": 0,
+        "timestamp": -1,
+        "selected": 0,
+        "probability": 0,
+        "title": "Congratulations!",
+        "description": "We’re happy to announce that you’ve won a prize.",
+        "decision_id": "",
+    },
+    {
+        "id": "n5",
+        "user_id": "1233",
+        "score": 0,
+        "timestamp": -1,
+        "selected": 0,
+        "probability": 0,
+        "title": "Event Registration",
+        "description": "Don’t miss out on our upcoming webinar.",
+        "decision_id": "",
+    },
+    {
+        "id": "n6",
+        "user_id": "1233",
+        "score": 0,
+        "timestamp": -1,
+        "selected": 0,
+        "probability": 0,
+        "title": "Low Battery Warning",
+        "description": "Battery level is getting low. Please charge your device.",
+        "decision_id": "",
+    },
+    {
+        "id": "n7",
+        "user_id": "1233",
+        "score": 0,
+        "timestamp": -1,
+        "selected": 0,
+        "probability": 0,
+        "title": "News Alert",
+        "description": "Check out the latest news and updates from around the world.",
+        "decision_id": "",
+    },
+    {
+        "id": "n8",
+        "user_id": "1233",
+        "score": 0,
+        "timestamp": -1,
+        "selected": 0,
+        "probability": 0,
+        "title": "Order Shipped",
+        "description": "Your order has been shipped. Track it here.",
+        "decision_id": "",
+    },
+    {
+        "id": "n9",
+        "user_id": "1233",
+        "score": 0,
+        "timestamp": -1,
+        "selected": 0,
+        "probability": 0,
+        "title": "Security Update Required",
+        "description": "Please update your security settings for better protection.",
+        "decision_id": "",
+    },
+    {
+        "id": "n10",
+        "user_id": "1233",
+        "score": 0.2,
+        "timestamp": 1754933992942,
+        "selected": 0,
+        "probability": 0,
+        "title": "Appointment Reminder",
+        "description": "Don’t forget your appointment today.",
+        "decision_id": "",
+    },
+]
 
-# Was the arm successful (e.g., did the user respond)? Usually 1 or 0
-selected = 1
+result = compute_scores(decisions, notifications)
 
-# Learning rate (α)
-alpha = 0.1
-
-# Temperature for softmax
-temperature = 0.5
-
-
-# Call your scorer's update function
-
-updated = update_scores(arms, chosen_arm, selected, alpha, temperature)
-
-print(updated)
+print(result)

@@ -24,6 +24,9 @@ RUN cd extensions/algorithm && make
 # Copy app source code
 COPY src/ ./
 
+# Get Environment variables
+RUN printenv > /etc/environment
+
 # Crontab
 COPY ./cron.sh .
 COPY ./crontab.txt .
@@ -32,4 +35,4 @@ COPY ./crontab.txt .
 RUN chmod +x cron.sh
 RUN crontab crontab.txt
 
-CMD [ "crond", "-f" ]
+CMD printenv > /etc/environment && crond -f && tail -F /var/log/cron.log

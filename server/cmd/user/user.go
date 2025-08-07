@@ -4,8 +4,6 @@ package user
 import (
 	"fmt"
 	"server/db"
-
-	"github.com/google/uuid"
 )
 
 type User struct {
@@ -30,7 +28,10 @@ func GetUser(db *db.DB, id string) *User {
 	_, ok := user["id"]
 
 	if ok {
-		name := user["name"].(string)
+		name, ok := user["name"].(string)
+		if !ok {
+			name = ""
+		}
 
 		return CreateUser(id, name)
 	} else {
@@ -39,9 +40,8 @@ func GetUser(db *db.DB, id string) *User {
 }
 
 // SetUser Set a new user on the database. Returns the id of the user created if any
-func SetUser(db *db.DB, name string) string {
-	id := uuid.New().String()
-	query := fmt.Sprintf("INSERT INTO users(id, name) WHERE ('%s', '%s');", id, name)
+func SetUser(db *db.DB, id string, name string) string {
+	query := fmt.Sprintf("INSERT INTO users(id, name) VALUES ('%s', '%s');", id, name)
 
 	status := db.SetEntry(query)
 
@@ -50,4 +50,51 @@ func SetUser(db *db.DB, name string) string {
 	}
 
 	return id
+}
+
+// CheckUser Creates a new user in the database if they don't exist
+func CheckUser(db *db.DB, id string, name string) bool {
+	user := GetUser(db, id)
+
+	if user == nil {
+		if name == "" {
+			name = id + "_no_user_name"
+		}
+
+		id = SetUser(db, id, name)
+	} else {
+		id = user.ID
+	}
+
+	return id != ""
+}
+
+// GetUsers Get all of the users in the database
+func GetUsers(db *db.DB) []*User {
+	users := []*User{}
+	query := "SELECT * FROM USERS"
+
+	results := db.GetEntries(query)
+
+	// Map  to struct
+	for _, result := range results {
+		id, ok := result["id"].(string)
+		if !ok {
+			id = ""
+		}
+
+		name, ok := result["name"].(string)
+		if !ok {
+			name = ""
+		}
+
+		user := &User{
+			ID:   id,
+			Name: name,
+		}
+
+		users = append(users, user)
+	}
+
+	return users
 }

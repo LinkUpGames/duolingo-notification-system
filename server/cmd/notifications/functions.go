@@ -4,8 +4,6 @@ package notifications
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
-	"os"
 	"server/cmd"
 	"server/db"
 )
@@ -15,39 +13,31 @@ func SelectNotifcation(userID string, variables *cmd.Variables, db *db.DB) *Noti
 	// Fetch the notifications and the scores for this user
 	notifications := getUserNotifications(userID, db, variables)
 
-	// Get the max score
-	var maxScore float64 = 0
-	for _, notification := range notifications {
-		score := notification.Score
+	// Calculte the recency delay
+	computeNotificationDecay(notifications, variables.Penalty, variables.Factor, variables.CutOff)
 
-		if score > maxScore {
-			maxScore = score
-		}
-	}
+	// Probabilities
+	computeSoftmaxProb(notifications, float64(variables.Explore))
 
-	// Compute Exponentials with Recovering differnce
-	total := computeExpScores(notifications, float64(variables.TEMPERATURE), maxScore)
-
-	// Normalize to get the probabilities
-	computeProbabilities(notifications, total)
+	// DEBUG: This is for debugging purposes only
+	printNotifications(notifications)
 
 	// Sample an arm using a weight probability
-	var notification *Notification = nil
-	r := rand.Float64()
-	cumulative := 0.0
-	for _, _notification := range notifications {
-		cumulative += _notification.Probability
+	notification := selectRandom(notifications)
 
-		if r < cumulative {
-			notification = _notification
-		}
+	// Update Scores
+	success := updateNotificationScores(notifications, db)
+
+	if !success {
+		fmt.Printf("Error with updating notification scores!\n")
 	}
 
 	// Log the decision
-	err := addDecisionLog(db, notification.ID, userID)
+	decisionID, err := addDecisionLog(db, notification.ID, notifications)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error with adding log: %s", err.Error())
+		fmt.Printf("Error with adding log: %s\n", err.Error())
 	}
+	notification.DecisionID = decisionID
 
 	return notification
 }
@@ -60,4 +50,31 @@ func MarshalNotification(notification *Notification) []byte {
 	}
 
 	return jsonBytes
+}
+
+func GetUserNotifications(userID string, db *db.DB, variables *cmd.Variables) []*Notification {
+	notifications := getUserNotifications(userID, db, variables)
+
+	return notifications
+}
+
+// CreateNotification Creates a notification object
+func CreateNotification(id string, userID string, score float64, timestamp int, days int, probability float64, title string, description string) *Notification {
+	notification := &Notification{
+		ID:          id,
+		UserID:      userID,
+		Score:       score,
+		Timestamp:   timestamp,
+		Days:        days,
+		Probability: probability,
+		Title:       title,
+		Description: description,
+	}
+
+	return notification
+}
+
+// UpdateNotificationScores Update the notifications scores for the users
+func UpdateNotificationScores(notifications []*Notification, db *db.DB) bool {
+	return updateNotificationScores(notifications, db)
 }

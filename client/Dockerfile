@@ -11,4 +11,4 @@ COPY source/ source/
 RUN npm install
 
 # Start frontend
-CMD [ "npm" ,"run","app:test" ]
+CMD [ "tail", "-f", "/dev/null" ]

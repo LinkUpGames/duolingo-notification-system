@@ -1,14 +1,20 @@
-import { Box, Text } from "ink";
+import { Box, useInput } from "ink";
+import { DateTime } from "luxon";
 import React, { useContext, useEffect, useState } from "react";
 import Notify, { type Notification } from "../notification/notification.js";
 import { AppContext, useFetch } from "../../utils.js";
+import Logger from "../../logs.js";
+import BigText from "ink-big-text";
 
 /**
  * The main area
  */
 const Main = () => {
+  // Context
   const { server } = useContext(AppContext);
-  const { fetch, loading, data } = useFetch<Notification>(server); // Fetch the notification
+  const { fetch: getNotification, loading: getNotificationLoad } =
+    useFetch<Notification>(server); // Fetch the notification that was selected to be shown
+  const { fetch: postNotification } = useFetch<string>(server); // Post whether the notification worked or not
 
   // STATES
   const [notification, setNotification] = useState<Notification | null>(null); // The notification fetched from the backend
@@ -19,10 +25,36 @@ const Main = () => {
    */
   const fetchNotification = async () => {
     try {
-      const result = await fetch("send_notification&user_id=1233");
+      const result = await getNotification("send_notification?user_id=1233");
 
       setNotification(result);
-    } catch {}
+    } catch (error) {
+      Logger.log({
+        level: "error",
+        message: `Error with fetching notification: ${error}`,
+      });
+    }
+  };
+
+  /**
+   * Accept the notification that was sent
+   * @param accepted Whether the notification was accepted or declined
+   */
+  const acceptNotification = async (accepted: boolean = false) => {
+    try {
+      await postNotification(
+        `accept_notification?decision_id=${
+          notification?.decision_id ?? ""
+        }&selected=${accepted}&timestamp=${DateTime.now().toMillis()}`
+      );
+
+      fetchNotification();
+    } catch (error) {
+      Logger.log({
+        level: "error",
+        message: `Error with accepting the notification: ${error}`,
+      });
+    }
   };
 
   // EFFECTS
@@ -33,6 +65,21 @@ const Main = () => {
     fetchNotification();
   }, []);
 
+  useInput(async (input, keys) => {
+    if (keys.return) {
+      // Accept the notification and update the value
+      if (notification) {
+        await acceptNotification(true);
+      }
+    }
+
+    if (input === "n") {
+      if (notification) {
+        await acceptNotification(false);
+      }
+    }
+  });
+
   return (
     <Box
       flexDirection="column"
@@ -42,11 +89,12 @@ const Main = () => {
       padding={1}
       borderStyle="round"
       borderColor="red"
+      flexGrow={1}
     >
-      {notification ? (
+      {!getNotificationLoad && notification ? (
         <Notify notification={notification} />
       ) : (
-        <Text> No Notification</Text>
+        <BigText text="No Notification" />
       )}
     </Box>
   );

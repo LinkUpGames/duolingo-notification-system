@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/mroth/weightedrand/v2"
 )
 
 // Notification The notification with the scores for a specific user
@@ -19,27 +20,18 @@ type Notification struct {
 	Timestamp   int     `json:"timestamp"`
 	Selected    int     `json:"selected"`
 	Probability float64 `json:"probability"`
-
-	Delta int
+	Title       string  `json:"title"`
+	Description string  `json:"description"`
+	Days        int     `json:"-"`
+	DecisionID  string  `json:"decision_id"`
 }
 
-// getNotificationIds Get the ids of all the notifications from the database
-func getNotificationIds(db *db.DB) []string {
-	ids := []string{}
-
-	query := "SELECT ID FROM notifications"
-
+// getNotifications Get the notifications from the database
+func getNotifications(db *db.DB) []map[string]any {
+	query := "SELECT * FROM notifications"
 	notifications := db.GetEntries(query)
 
-	for _, notification := range notifications {
-		id, ok := notification["id"]
-
-		if ok {
-			ids = append(ids, id.(string))
-		}
-	}
-
-	return ids
+	return notifications
 }
 
 // getNotifcationScores Get the scores for the notifications stored from the database
@@ -51,80 +43,115 @@ func getNotifcationScores(db *db.DB, userID string) []map[string]any {
 	return results
 }
 
-// Compute the Exponential recovering difference for the scores
-// This will modify the scores of the actual notification and return the total value sum value of the Scores
-func computeExpScores(notifications []*Notification, temperature float64, maxScore float64) float64 {
-	total := 0.0
-
+// computeNotificationDecay Compute the decay based on the hyperparamaters
+// The penalty and factor control the penalty size for the notification score
+// The cutoff controls the decay speed (larger size slower decay)
+func computeNotificationDecay(notifications []*Notification, penalty float32, factor float32, cutoff int) {
 	for _, notification := range notifications {
-		norm := (notification.Score - maxScore) / temperature
-		val := norm * float64(notification.Delta)
-		score := math.Exp(val)
-		notification.Score = score
+		base := float64(penalty) * float64(factor)
 
-		total += score
+		power := float64(notification.Days) / float64(cutoff)
+
+		decay := math.Pow(base, power)
+
+		notification.Score -= decay
 	}
-
-	return total
 }
 
-// computeProbabilities Compute the probabilities for all notifications to be sent to the user
-func computeProbabilities(notifications []*Notification, total float64) {
-	for _, notification := range notifications {
-		val := notification.Score / total
+// computeSoftmaxProb Compute the probability for the notifications using softmax
+func computeSoftmaxProb(notifications []*Notification, explore float64) {
+	expValues := make([]float64, len(notifications))
+	sumExp := 0.0
 
-		notification.Probability = val
+	// Compute Exponential Values
+	for i, notification := range notifications {
+		value := notification.Score / explore
+
+		expValues[i] = math.Exp(value)
+		sumExp += expValues[i]
+	}
+
+	// Normalize
+	for i, notification := range notifications {
+		notification.Probability = expValues[i] / sumExp
 	}
 }
 
 // addDecisionLog Add the selected notification to the table that saves the decision logs
-func addDecisionLog(db *db.DB, notification string, user string) error {
+func addDecisionLog(db *db.DB, selected string, notifications []*Notification) (string, error) {
+	// Create the decision log
 	id := uuid.New().String()
 	now := time.Now().UnixMilli()
 
-	query := fmt.Sprintf("INSERT INTO DECISIONS (id, user_id, notification_id, timestamp) VALUES('%s', '%s', '%s', %d);", id, user, notification, now)
+	// Fetch the selected notification
+	var selectedNotification *Notification
 
-	err := db.SetEntry(query)
-
-	if err {
-		return errors.New("error instering decision log")
+	for _, notification := range notifications {
+		if notification.ID == selected {
+			selectedNotification = notification
+			break
+		}
 	}
 
-	return nil
-}
+	query := fmt.Sprintf("INSERT INTO decisions (id, user_id, notification_id, timestamp) VALUES('%s', '%s', '%s', %d);", id, selectedNotification.UserID, selectedNotification.ID, now)
+	success := db.SetEntry(query)
 
-// createNotification Creates a notification object
-func createNotification(id string, userID string, score float64, timestamp int, selected int, delta int, probability float64) *Notification {
-	notification := &Notification{
-		ID:          id,
-		UserID:      userID,
-		Score:       score,
-		Timestamp:   timestamp,
-		Selected:    selected,
-		Delta:       delta,
-		Probability: probability,
+	// Create the probability map
+	if success {
+		for _, notification := range notifications {
+			// New id for probability
+			probID := uuid.New().String()
+
+			query := fmt.Sprintf("INSERT INTO probabilities (id, decision_id, user_id, notification_id, probability) VALUES ('%s', '%s', '%s', '%s', %f);", probID, id, notification.UserID, notification.ID, notification.Probability)
+
+			success := db.SetEntry(query)
+
+			if !success {
+				return "", errors.New("error inserting probability log for decision id: " + id)
+			}
+		}
+	} else {
+		return "", errors.New("error inserting decision log")
 	}
 
-	return notification
+	return id, nil
 }
 
 // getUserNotifications Get all the notifications and their scores for the user inquiered
 func getUserNotifications(userID string, db *db.DB, variables *cmd.Variables) []*Notification {
 	notifications := []*Notification{}
 
-	ids := getNotificationIds(db)
+	dbNotifications := getNotifications(db)
 
 	// Query the scores table
 	scores := getNotifcationScores(db, userID)
 
 	// Go through all the ids of notification and query stored data associated with the user
-	now := time.Now().UnixMilli()
-	for _, id := range ids {
+	now := time.Now()
+	for _, dbNotification := range dbNotifications {
+		id, ok := dbNotification["id"].(string)
+		if !ok {
+			id = ""
+		}
+
+		title, ok := dbNotification["title"].(string)
+		if !ok {
+			title = ""
+		}
+
+		description, ok := dbNotification["description"].(string)
+		if !ok {
+			description = ""
+		}
+
 		var notification *Notification
 		var score map[string]any = nil
 
 		for _, _score := range scores {
-			notificationID := _score["id"]
+			notificationID, ok := _score["id"]
+			if !ok {
+				notificationID = ""
+			}
 
 			if notificationID == id {
 				score = _score
@@ -134,20 +161,88 @@ func getUserNotifications(userID string, db *db.DB, variables *cmd.Variables) []
 
 		// If the score is not nil then populate with database values
 		if score != nil {
-			reward := score["reward"].(float64)
-			timestamp := score["timestamp"].(int)
-			selected := score["selected"].(int)
+			notificationScore, ok := score["score"].(float64)
+			if !ok {
+				notificationScore = float64(variables.Score)
+			}
 
-			diff := timestamp - int(now)
-			diffAbs := int(math.Abs(float64(diff)))
+			timestamp, ok := score["timestamp"].(int64)
 
-			notification = createNotification(id, userID, reward, timestamp, selected, diffAbs, 0)
+			if !ok {
+				timestamp = -1
+			}
+
+			milliseconds := time.UnixMilli(int64(timestamp))
+
+			days := int(now.Sub(milliseconds).Hours() / 24)
+
+			notification = CreateNotification(id, userID, notificationScore, int(timestamp), days, 0, title, description)
 		} else {
-			notification = createNotification(id, userID, float64(variables.DEFAULT_REWARD), -1, 0, int(variables.DEFAULT_DELTA), 0)
+			notification = CreateNotification(id, userID, float64(variables.Score), -1, variables.CutOff, 0, title, description)
 		}
 
 		notifications = append(notifications, notification)
 	}
 
 	return notifications
+}
+
+// printNotifications Prints the notification as a json string, each on a line
+func printNotifications(notifications []*Notification) {
+	fmt.Print("\n\n---Notifications---")
+	for _, notification := range notifications {
+
+		marshal := MarshalNotification(notification)
+		content := string(marshal)
+
+		fmt.Printf("\nNotification: %s\n", content)
+	}
+	fmt.Print("---Notifications---\n\n")
+}
+
+// selectRandom Select a notification at random given the weighted probability of each notification
+func selectRandom(notifications []*Notification) *Notification {
+	choices := []weightedrand.Choice[*Notification, int]{}
+
+	for _, notification := range notifications {
+		val := int(notification.Probability * 100)
+
+		choice := weightedrand.NewChoice(notification, val)
+
+		choices = append(choices, choice)
+	}
+
+	// Select one at random
+	chooser, err := weightedrand.NewChooser(choices...)
+
+	var result *Notification
+	if err != nil {
+		result = nil
+	} else {
+		result = chooser.Pick()
+	}
+
+	return result
+}
+
+// updateNotificationScores Update the notification score
+func updateNotificationScores(notifications []*Notification, db *db.DB) bool {
+	fmt.Printf("\n--- Update Notification Scores ---\n")
+	for _, notification := range notifications {
+		fmt.Printf("Notification [%s] | Score: [%f] | User: [%s]\n", notification.ID, notification.Score, notification.UserID)
+
+		// Get the current milliseconds
+		timestamp := -1
+
+		query := fmt.Sprintf("INSERT INTO scores (id, user_id, score, timestamp) VALUES ('%s', '%s', %f, %d) ON CONFLICT (id, user_id) DO UPDATE SET score = EXCLUDED.score", notification.ID, notification.UserID, notification.Score, timestamp)
+
+		success := db.SetEntry(query)
+
+		if !success {
+			return false
+		}
+	}
+	fmt.Printf("\n--- Update Notification Scores ---\n")
+
+	return true
 }

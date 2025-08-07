@@ -1,5 +1,7 @@
 package db
 
+import "fmt"
+
 // GetEntries Get multiple entries from the database based on the query
 func (db *DB) GetEntries(query string) []map[string]any {
 	results := []map[string]any{}
@@ -62,6 +64,9 @@ func (db *DB) SetEntry(query string) bool {
 	client := db.client
 
 	_, err := client.Exec(query)
+	if err != nil {
+		fmt.Printf("Error with SetEntry: [%s]\n", err.Error())
+	}
 
 	return err == nil
 }

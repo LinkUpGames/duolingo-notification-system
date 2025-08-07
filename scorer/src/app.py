@@ -1,27 +1,26 @@
-from scorer import update_scores
+import fetch
+from scorer import compute_scores
 
-# List of "arms", each with a name and initial reward
-arms: list = [
-    {"name": "foo", "reward": 0.1},
-    {"name": "bar", "reward": 0.5},
-    {"name": "baz", "reward": 0.9},
-]
+# Fetch all users
+users = fetch.get_users()
 
-# Name of the arm that was selected
-chosen_arm = "bar"
+# Get all of the decisions we are going to be working with
+for user in users:
+    logs = fetch.get_decisions(
+        user["id"]
+    )  # Keep track of all the decisions made by the system and user
 
-# Was the arm successful (e.g., did the user respond)? Usually 1 or 0
-selected = 1
+    print(f"Decisions:\n{logs}\n")
 
-# Learning rate (α)
-alpha = 0.1
+    notifications = fetch.get_user_notifications(user["id"])
 
-# Temperature for softmax
-temperature = 0.5
+    print(f"Notifications:\n{notifications}\n")
 
+    results = compute_scores(logs, notifications)
 
-# Call your scorer's update function
+    print(f"Results:\n{results}\n")
 
-updated = update_scores(arms, chosen_arm, selected, alpha, temperature)
+    # Update the results
+    response = fetch.update_notification_score(user["id"], results)
 
-print(updated)
+    print(f"Response: {response}\n")

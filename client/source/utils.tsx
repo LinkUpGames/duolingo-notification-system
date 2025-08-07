@@ -1,5 +1,6 @@
 import axios from "axios";
 import { createContext, useMemo, useState } from "react";
+import Logger from "./logs.js";
 
 type AppContextProps = {
   /**
@@ -58,9 +59,9 @@ export const useFetch = <T = unknown,>(host: string) => {
 
       data = response.data as T;
 
-      console.log("Data: ", response.data);
+      Logger.info("Data", { message: response.data });
     } catch (error) {
-      console.error("Error fetching: ", error);
+      Logger.log({ level: "error", message: error as string });
     }
 
     return data;

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"server/cmd"
 	"server/cmd/notifications"
+	"server/cmd/user"
 	"server/db"
 )
 
@@ -24,10 +25,14 @@ func Middleware(ctx *cmd.AppContext, handler Handler) http.HandlerFunc {
 func SendNotificationHandler(ctx *cmd.AppContext, w http.ResponseWriter, r *http.Request) {
 	// Get Parameters
 	userID := r.URL.Query().Get("user_id")
+	userName := r.URL.Query().Get("name")
 
 	// Context
 	variables := ctx.Ctx.Value(cmd.VARIABLES).(*cmd.Variables)
 	db := ctx.Ctx.Value(cmd.DATABASE).(*db.DB)
+
+	// Create user if it does not exist
+	user.CheckUser(db, userID, userName)
 
 	// Select a notification
 	notification := notifications.SelectNotifcation(userID, variables, db)

@@ -21,7 +21,10 @@ CREATE TABLE IF NOT EXISTS scores (
 CREATE INDEX IF NOT EXISTS GSI_scores_user ON scores (user_id);
 
 -- Create the users table
-CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY NOT NULL, name TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS users (
+  id TEXT UNIQUE PRIMARY KEY NOT NULL,
+  name TEXT NOT NULL
+);
 
 -- Decision Logs after the selector chooses a notification to change
 CREATE TABLE IF NOT EXISTS decisions (
@@ -29,12 +32,14 @@ CREATE TABLE IF NOT EXISTS decisions (
   user_id TEXT NOT NULL, -- User id
   notification_id TEXT NOT NULL, -- The id of the notification that was selected
   timestamp BIGINT NOT NULL, -- the epoch timestamp of when the decision was made
-  PRIMARY KEY (user_id, notification_id),
+  PRIMARY KEY (id),
   FOREIGN KEY (user_id) REFERENCES users (id),
   FOREIGN KEY (notification_id) REFERENCES notifications (id)
 );
 
 CREATE INDEX IF NOT EXISTS GSI_decisions_id ON decisions (id);
+
+CREATE INDEX IF NOT EXISTS GSI_decisions ON decisions (user_id, notification_id);
 
 CREATE INDEX IF NOT EXISTS GSI_decisions_timestamp ON decisions (timestamp);
 

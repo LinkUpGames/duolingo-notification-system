@@ -4,7 +4,6 @@ package notifications
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"os"
 	"server/cmd"
 	"server/db"
@@ -30,20 +29,10 @@ func SelectNotifcation(userID string, variables *cmd.Variables, db *db.DB) *Noti
 
 	// Normalize to get the probabilities
 	computeProbabilities(notifications, total)
+	printNotifications(notifications)
 
 	// Sample an arm using a weight probability
-	var notification *Notification = nil
-	r := rand.Float64()
-
-	cumulative := 0.0
-	printNotifications(notifications)
-	for _, _notification := range notifications {
-		cumulative += _notification.Probability
-
-		if r < cumulative {
-			notification = _notification
-		}
-	}
+	notification := selectRandom(notifications)
 
 	// Log the decision
 	err := addDecisionLog(db, notification.ID, userID)

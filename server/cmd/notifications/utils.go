@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/mroth/weightedrand/v2"
 )
 
 // Notification The notification with the scores for a specific user
@@ -161,4 +162,29 @@ func printNotifications(notifications []*Notification) {
 
 		fmt.Printf("\nNotification: %s\n", content)
 	}
+}
+
+// selectRandom Select a notification at random given the weighted probability of each notification
+func selectRandom(notifications []*Notification) *Notification {
+	choices := []weightedrand.Choice[*Notification, int]{}
+
+	for _, notification := range notifications {
+		val := int(notification.Probability * 100)
+
+		choice := weightedrand.NewChoice(notification, val)
+
+		choices = append(choices, choice)
+	}
+
+	// Select one at random
+	chooser, err := weightedrand.NewChooser(choices...)
+
+	var result *Notification
+	if err != nil {
+		result = nil
+	} else {
+		result = chooser.Pick()
+	}
+
+	return result
 }

@@ -155,6 +155,7 @@ func getUserNotifications(userID string, db *db.DB, variables *cmd.Variables) []
 
 // printNotifications Prints the notification as a json string, each on a line
 func printNotifications(notifications []*Notification) {
+	fmt.Print("\n---Notifications---")
 	for _, notification := range notifications {
 
 		marshal := MarshalNotification(notification)
@@ -162,6 +163,7 @@ func printNotifications(notifications []*Notification) {
 
 		fmt.Printf("\nNotification: %s\n", content)
 	}
+	fmt.Print("---Notifications---\n")
 }
 
 // selectRandom Select a notification at random given the weighted probability of each notification

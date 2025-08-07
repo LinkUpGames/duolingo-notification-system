@@ -3,6 +3,7 @@ import { AppContext, useSetup } from "./utils.js";
 import Window from "./layout/window.js";
 import Sidebar from "./layout/sidebar.js";
 import Main from "./components/main/main.js";
+import Logger from "./logs.js";
 
 type Props = {
   name: string | undefined;
@@ -11,7 +12,7 @@ type Props = {
 export default function App({ name = "Stranger" }: Props) {
   const { server } = useSetup();
 
-  console.log("Name: ", name);
+  Logger.info("Name", { message: name });
 
   return (
     <AppContext.Provider

@@ -39,6 +39,8 @@ CREATE TABLE IF NOT EXISTS decisions (
 
 CREATE INDEX IF NOT EXISTS GSI_decisions_id ON decisions (id);
 
+CREATE INDEX IF NOT EXISTS GSI_decisions_user ON decisions (user_id);
+
 CREATE INDEX IF NOT EXISTS GSI_decisions ON decisions (user_id, notification_id);
 
 CREATE INDEX IF NOT EXISTS GSI_decisions_timestamp ON decisions (timestamp);
@@ -62,7 +64,8 @@ CREATE TABLE IF NOT EXISTS events (
   decision_id TEXT NOT NULL,
   selected BOOLEAN NOT NULL, -- The reward
   timestamp BIGINT NOT NULL,
-  PRIMARY KEY (decision_id)
+  PRIMARY KEY (decision_id),
+  FOREIGN KEY (decision_id) REFERENCES decisions (id)
 );
 
 -- Insert the notifications available to send to the front end

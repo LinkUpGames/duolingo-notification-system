@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"server/cmd"
+	"server/cmd/events"
 	"server/cmd/notifications"
 	"server/cmd/user"
 	"server/db"
@@ -53,5 +54,28 @@ func GetUserNotificationsHandler(ctx *cmd.AppContext, w http.ResponseWriter, r *
 		w.Write(value)
 	} else {
 		w.Write(jsonBytes)
+	}
+}
+
+// GetUserDecisionsHandler Get all of the decisions that the user has done so far to update the scores of notifications
+func GetUserDecisionsHandler(ctx *cmd.AppContext, w http.ResponseWriter, r *http.Request) {
+	// Context
+	db := ctx.Ctx.Value(cmd.DATABASE).(*db.DB)
+
+	// Parameters
+	userID := r.URL.Query().Get("user_id")
+
+	decisions := events.GetDecisions(userID, db)
+
+	jsonBytes, err := json.Marshal(decisions)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err != nil {
+		emptyArray := []any{}
+
+		empty, _ := json.Marshal(emptyArray)
+		w.Write(empty)
+	} else {
 	}
 }

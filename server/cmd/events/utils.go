@@ -33,7 +33,7 @@ type EventLog struct {
 func getDecisions(user string, db *db.DB) []*DecisionLog {
 	decisions := []*DecisionLog{}
 
-	query := fmt.Sprintf("SELECT * FROM decisions WHERE user_id = %s;", user)
+	query := fmt.Sprintf("SELECT * FROM decisions WHERE user_id = '%s';", user)
 	entries := db.GetEntries(query)
 
 	for _, entry := range entries {
@@ -54,7 +54,7 @@ func getDecisions(user string, db *db.DB) []*DecisionLog {
 func getDecisionEvent(id string, db *db.DB) *EventLog {
 	var event *EventLog
 
-	query := fmt.Sprintf("SELECT * FROM events WHERE decision_id = %s", id)
+	query := fmt.Sprintf("SELECT * FROM events WHERE decision_id = '%s'", id)
 	entry := db.GetEntry(query)
 
 	selected := entry["selected"].(bool)

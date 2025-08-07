@@ -42,24 +42,9 @@ func getNotificationIds(db *db.DB) []string {
 	return ids
 }
 
-// getNotification Get a notification given the id
-func getNotification(id string, db *db.DB) map[string]any {
-	query := fmt.Sprintf("SELECT ID FROM NOTIFICATIONS WHERE ID = %s", id)
-
-	notification := db.GetEntry(query)
-
-	_, ok := notification["id"].(string)
-
-	if !ok {
-		return nil
-	}
-
-	return notification
-}
-
 // getNotifcationScores Get the scores for the notifications stored from the database
 func getNotifcationScores(db *db.DB, userID string) []map[string]any {
-	query := fmt.Sprintf("SELECT * FROM scores WHERE user_id = %s", userID)
+	query := fmt.Sprintf("SELECT * FROM scores WHERE user_id = '%s'", userID)
 
 	results := db.GetEntries(query)
 
@@ -97,7 +82,7 @@ func addDecisionLog(db *db.DB, notification string, user string) error {
 	id := uuid.New().String()
 	now := time.Now().UnixMilli()
 
-	query := fmt.Sprintf("INSERT INTO DECISIONS (id, user_id, notification_id, timestamp) VALUES(%s, %s, %s, %d);", id, user, notification, now)
+	query := fmt.Sprintf("INSERT INTO DECISIONS (id, user_id, notification_id, timestamp) VALUES('%s', '%s', '%s', %d);", id, user, notification, now)
 
 	err := db.SetEntry(query)
 

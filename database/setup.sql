@@ -57,15 +57,13 @@ CREATE TABLE IF NOT EXISTS probabilities (
 
 CREATE INDEX IF NOT EXISTS GSI_probabilities_decision ON probabilities (decision_id);
 
--- Event loggers
+-- Events happen after the user has decided on a notification
 CREATE TABLE IF NOT EXISTS events (
-  id TEXT PRIMARY KEY,
-  user_id TEXT NOT NULL,
-  notification_id TEXT NOT NULL,
-  timestamp BIGINT NOT NULL
+  decision_id TEXT NOT NULL,
+  selected BOOLEAN NOT NULL, -- The reward
+  timestamp BIGINT NOT NULL,
+  PRIMARY KEY (decision_id)
 );
-
-CREATE INDEX IF NOT EXISTS GSI_events_user_id ON events (user_id);
 
 -- Insert the notifications available to send to the front end
 -- NOTE: I used LLM's to generate random notifications, this is not reflective of any other choice

@@ -77,5 +77,6 @@ func GetUserDecisionsHandler(ctx *cmd.AppContext, w http.ResponseWriter, r *http
 		empty, _ := json.Marshal(emptyArray)
 		w.Write(empty)
 	} else {
+		w.Write(jsonBytes)
 	}
 }

@@ -20,7 +20,7 @@ func main() {
 	http.HandleFunc("/get_user_notifications", handlers.Middleware(ctx, handlers.GetUserNotificationsHandler))
 	http.HandleFunc("/get_user_decisions", handlers.Middleware(ctx, handlers.GetUserDecisionsHandler))
 	http.HandleFunc("/get_decision_probabilities", handlers.Middleware(ctx, handlers.GetDecisionProbabilitiesHandler))
-	http.HandleFunc("/get_user_events", handlers.Middleware(ctx, nil))
+	http.HandleFunc("/get_decision_event", handlers.Middleware(ctx, handlers.GetDecisionEventHandler))
 
 	// Start Server
 	fmt.Printf("Listening on port %s\n", PORT)

@@ -65,3 +65,26 @@ func CheckUser(db *db.DB, id string, name string) bool {
 
 	return id != ""
 }
+
+// GetUsers Get all of the users in the database
+func GetUsers(db *db.DB) []*User {
+	users := []*User{}
+	query := "SELECT * FROM USERS"
+
+	results := db.GetEntries(query)
+
+	// Map  to struct
+	for _, result := range results {
+		id := result["id"].(string)
+		name := result["name"].(string)
+
+		user := &User{
+			ID:   id,
+			Name: name,
+		}
+
+		users = append(users, user)
+	}
+
+	return users
+}

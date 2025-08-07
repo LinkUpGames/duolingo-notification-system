@@ -54,3 +54,9 @@ func MarshalNotification(notification *Notification) []byte {
 
 	return jsonBytes
 }
+
+func GetUserNotifications(userID string, db *db.DB, variables *cmd.Variables) []*Notification {
+	notifications := getUserNotifications(userID, db, variables)
+
+	return notifications
+}

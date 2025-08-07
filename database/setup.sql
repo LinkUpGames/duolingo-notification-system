@@ -45,7 +45,7 @@ CREATE INDEX IF NOT EXISTS GSI_decisions_timestamp ON decisions (timestamp);
 
 -- The probabilities for all notifications based on a timestamp
 CREATE TABLE IF NOT EXISTS probabilities (
-  id TEXT NOT NULL,
+  id TEXT UNIQUE NOT NULL,
   decision_id TEXT NOT NULL, -- decision log 
   user_id TEXT NOT NULL, -- The user
   notification_id TEXT NOT NULL, -- the notification id

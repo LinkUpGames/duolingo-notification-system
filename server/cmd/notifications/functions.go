@@ -29,13 +29,15 @@ func SelectNotifcation(userID string, variables *cmd.Variables, db *db.DB) *Noti
 
 	// Normalize to get the probabilities
 	computeProbabilities(notifications, total)
+
+	// DEBUG: This is for debugging purposes only
 	printNotifications(notifications)
 
 	// Sample an arm using a weight probability
 	notification := selectRandom(notifications)
 
 	// Log the decision
-	err := addDecisionLog(db, notification.ID, userID)
+	err := addDecisionLog(db, notification.ID, notifications)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error with adding log: %s", err.Error())
 	}

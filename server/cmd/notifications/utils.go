@@ -69,16 +69,40 @@ func computeProbabilities(notifications []*Notification, total float64) {
 }
 
 // addDecisionLog Add the selected notification to the table that saves the decision logs
-func addDecisionLog(db *db.DB, notification string, user string) error {
+func addDecisionLog(db *db.DB, selected string, notifications []*Notification) error {
+	// Create the decision log
 	id := uuid.New().String()
 	now := time.Now().UnixMilli()
 
-	query := fmt.Sprintf("INSERT INTO DECISIONS (id, user_id, notification_id, timestamp) VALUES('%s', '%s', '%s', %d);", id, user, notification, now)
+	// Fetch the selected notification
+	var selectedNotification *Notification
 
-	err := db.SetEntry(query)
+	for _, notification := range notifications {
+		if notification.ID == selected {
+			selectedNotification = notification
+			break
+		}
+	}
 
-	if err {
-		return errors.New("error instering decision log")
+	query := fmt.Sprintf("INSERT INTO DECISIONS (id, user_id, notification_id, timestamp) VALUES('%s', '%s', '%s', %d);", id, selectedNotification.UserID, selectedNotification.ID, now)
+	success := db.SetEntry(query)
+
+	// Create the probability map
+	if success {
+		for _, notification := range notifications {
+			// New id for probability
+			probID := uuid.New().String()
+
+			query := fmt.Sprintf("INSERT INTO PROBABILITIES (id, decision_id, user_id, notification_id, probability) VALUES ('%s', '%s', '%s', '%s', %f);", probID, id, notification.UserID, notification.ID, notification.Probability)
+
+			success := db.SetEntry(query)
+
+			if !success {
+				return errors.New("error inserting probability log for decision id: " + id)
+			}
+		}
+	} else {
+		return errors.New("error inserting decision log")
 	}
 
 	return nil

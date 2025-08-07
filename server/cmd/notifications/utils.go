@@ -20,26 +20,17 @@ type Notification struct {
 	Timestamp   int     `json:"timestamp"`
 	Selected    int     `json:"selected"`
 	Probability float64 `json:"probability"`
+	Title       string  `json:"title"`
+	Description string  `json:"description"`
 	Delta       int     `json:"-"`
 }
 
-// getNotificationIds Get the ids of all the notifications from the database
-func getNotificationIds(db *db.DB) []string {
-	ids := []string{}
-
-	query := "SELECT ID FROM notifications"
-
+// getNotifications Get the notifications from the database
+func getNotifications(db *db.DB) []map[string]any {
+	query := "SELECT * FROM notifications"
 	notifications := db.GetEntries(query)
 
-	for _, notification := range notifications {
-		id, ok := notification["id"]
-
-		if ok {
-			ids = append(ids, id.(string))
-		}
-	}
-
-	return ids
+	return notifications
 }
 
 // getNotifcationScores Get the scores for the notifications stored from the database
@@ -94,7 +85,7 @@ func addDecisionLog(db *db.DB, notification string, user string) error {
 }
 
 // createNotification Creates a notification object
-func createNotification(id string, userID string, score float64, timestamp int, selected int, delta int, probability float64) *Notification {
+func createNotification(id string, userID string, score float64, timestamp int, selected int, delta int, probability float64, title string, description string) *Notification {
 	notification := &Notification{
 		ID:          id,
 		UserID:      userID,
@@ -103,6 +94,8 @@ func createNotification(id string, userID string, score float64, timestamp int, 
 		Selected:    selected,
 		Delta:       delta,
 		Probability: probability,
+		Title:       title,
+		Description: description,
 	}
 
 	return notification
@@ -112,14 +105,18 @@ func createNotification(id string, userID string, score float64, timestamp int, 
 func getUserNotifications(userID string, db *db.DB, variables *cmd.Variables) []*Notification {
 	notifications := []*Notification{}
 
-	ids := getNotificationIds(db)
+	dbNotifications := getNotifications(db)
 
 	// Query the scores table
 	scores := getNotifcationScores(db, userID)
 
 	// Go through all the ids of notification and query stored data associated with the user
 	now := time.Now().UnixMilli()
-	for _, id := range ids {
+	for _, dbNotification := range dbNotifications {
+		id := dbNotification["id"].(string)
+		title := dbNotification["title"].(string)
+		description := dbNotification["description"].(string)
+
 		var notification *Notification
 		var score map[string]any = nil
 
@@ -141,9 +138,9 @@ func getUserNotifications(userID string, db *db.DB, variables *cmd.Variables) []
 			diff := timestamp - int(now)
 			diffAbs := int(math.Abs(float64(diff)))
 
-			notification = createNotification(id, userID, reward, timestamp, selected, diffAbs, 0)
+			notification = createNotification(id, userID, reward, timestamp, selected, diffAbs, 0, title, description)
 		} else {
-			notification = createNotification(id, userID, float64(variables.DEFAULT_REWARD), -1, 0, int(variables.DEFAULT_DELTA), 0)
+			notification = createNotification(id, userID, float64(variables.DEFAULT_REWARD), -1, 0, int(variables.DEFAULT_DELTA), 0, title, description)
 		}
 
 		notifications = append(notifications, notification)

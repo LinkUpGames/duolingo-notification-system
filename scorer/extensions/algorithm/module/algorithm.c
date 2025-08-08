@@ -77,6 +77,15 @@ Notification *create_notification(char const *id, float score,
   notification->probability = probability;
   notification->score = score;
 
+  // Setup the compute sums for later
+  notification->m_plus = 0;
+  notification->m_plus_count = 0;
+  notification->m_plus_sum = 0;
+
+  notification->m_minus = 1; // Avoid division by zero later
+  notification->m_minus_count = 0;
+  notification->m_minus_sum = 0;
+
   return notification;
 }
 
@@ -186,13 +195,95 @@ Decision *parse_python_obj(PyObject *obj) {
     return NULL;
   }
 
-  PyObject *keys = PyDict_Keys(probabilities_obj); // Create a new list
+  long notification_length = 0;
+  Notification **notifications =
+      parse_python_notification_dict(probabilities_obj, &notification_length);
+
+  if (notifications == NULL) {
+    PyErr_NoMemory();
+    return NULL;
+  }
+
+  // Create decision struct
+  Decision *decision = create_decision(id, notification_id, selected);
+  if (decision == NULL) {
+    PyErr_Format(PyExc_ValueError, "Could not allocate decision memory");
+    PyErr_NoMemory();
+    return NULL;
+  }
+
+  decision->probabilities = notifications;
+  decision->probabilities_length = notification_length;
+
+  return decision;
+}
+
+Notification **compute_scores(Decision **decisions, long length) {
+  for (size_t i = 0; i < length; i++) {
+    Decision *decision = decisions[i];
+
+    int was_selected = decision->selected;
+    char *selected_notification_id = decision->notification_id;
+
+    long notification_length = decision->probabilities_length;
+
+    // Set the weights when selected and when not selected
+    for (size_t j = 0; j < notification_length; j++) {
+      Notification *notification = decision->probabilities[j];
+      double weight = 1 / notification->probability;
+      double value = was_selected * weight;
+
+      if (strcmp(notification->id, selected_notification_id) == 0) {
+        //  This is the notificaiton that was selected
+        notification->m_plus_count += value * weight;
+        notification->m_plus_sum += weight;
+      } else {
+        // Not selected, reweight score
+        notification->m_minus_count += value * weight;
+        notification->m_minus_sum += weight;
+      }
+    }
+
+    // Calculate m_plus and m_minus
+    for (size_t j = 0; j < notification_length; j++) {
+      Notification *notification = decision->probabilities[j];
+      float m_plus = 0;
+      float m_minus = 1;
+
+      m_plus = notification->m_plus_count > 0
+                   ? notification->m_plus_sum / notification->m_plus_count
+                   : m_plus;
+
+      m_minus = notification->m_minus_count > 0
+                    ? notification->m_minus_sum / notification->m_minus_count
+                    : m_minus;
+
+      // Scores
+      notification->m_plus = m_plus;
+      notification->m_minus = m_minus;
+      notification->score = (m_plus / m_minus) / m_minus;
+    }
+  }
+
+  return NULL;
+}
+
+Notification **parse_python_notification_dict(PyObject *dict, long *length) {
+  // Check if it's a dictionary
+  if (!PyDict_Check(dict)) {
+    PyErr_Format(PyExc_ValueError, "probabilities is not a dictionary");
+
+    return NULL;
+  }
+
+  PyObject *keys = PyDict_Keys(dict); // Create a new list
   if (!keys) {
     PyErr_Format(PyExc_ValueError, "Could not get keys");
     return NULL;
   }
-
   Py_ssize_t keys_length = PyList_Size(keys);
+  *length = keys_length;
+
   Notification **notifications = create_notification_list(keys_length);
   if (notifications == NULL) {
     PyErr_NoMemory();
@@ -202,11 +293,11 @@ Decision *parse_python_obj(PyObject *obj) {
 
   // Iterate through the keys
   for (Py_ssize_t i = 0; i < keys_length; i++) {
-    // Get notification id
+    // Get the notification id
     PyObject *key_obj = PyList_GetItem(keys, i);
 
     // Get probability value
-    PyObject *value_obj = PyDict_GetItem(probabilities_obj, key_obj);
+    PyObject *value_obj = PyDict_GetItem(dict, key_obj);
 
     const char *notification_id = PyUnicode_AsUTF8(key_obj);
     const float value = PyFloat_AsDouble(value_obj);
@@ -234,50 +325,8 @@ Decision *parse_python_obj(PyObject *obj) {
     // Add the notification reference
     notifications[i] = notification;
   }
-  Py_DECREF(keys); // free at the end
 
-  // Create decision struct
-  Decision *decision = create_decision(id, notification_id, selected);
-  if (decision == NULL) {
-    free_notification_list(notifications, keys_length);
-    return NULL;
-  }
+  Py_DECREF(keys);
 
-  decision->probabilities = notifications;
-  decision->probabilities_length = keys_length;
-
-  return decision;
-}
-
-Notification **compute_scores(Decision **decisions, long length) {
-  for (size_t i = 0; i < length; i++) {
-    Decision *decision = decisions[i];
-
-    int was_selected = decision->selected;
-    char *selected_notification_id = decision->notification_id;
-
-    long notification_length = decision->probabilities_length;
-
-    for (size_t j = 0; j < notification_length; j++) {
-      Notification *notification = decision->probabilities[j];
-      double weight = 1 / notification->probability;
-      double value = was_selected * weight;
-
-      if (strcmp(notification->id, selected_notification_id) == 0) {
-        //  This is the notificaiton that was selected
-
-        // m_plus_sum[id] += value * weight
-        // m_plus_count[id] += weight
-
-      } else {
-        // Not selected, reweight score
-        // m_minus_sum[id] += value * weight
-        // m_minus_count[id] += weight
-      }
-    }
-
-    printf("\nDecision: [%s]\n", decision->id);
-  }
-
-  return NULL;
+  return notifications;
 }

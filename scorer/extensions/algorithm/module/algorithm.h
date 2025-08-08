@@ -14,6 +14,24 @@ typedef struct Notification {
   // The probability that the notification was selected
   float probability;
 
+  // rewarded weight sum when selected
+  float m_plus_sum;
+
+  // weight sum when selcted
+  float m_plus_count;
+
+  // reward weight sum when not selected
+  float m_minus_sum;
+
+  // weight sum when not selected
+  float m_minus_count;
+
+  // The average weight when the notification is selected
+  float m_plus;
+
+  // The average weight when the notification was not selected;
+  float m_minus;
+
 } Notification;
 
 // The decision log
@@ -103,6 +121,14 @@ Decision **parse_python_list(PyObject *list, Py_ssize_t length);
  * @param obj The python object
  */
 Decision *parse_python_obj(PyObject *obj);
+
+/**
+ * Parse the dictionary of a decision python object and return the notifications
+ * @param dict The python dictionary
+ * @param length The length of the list once it's been parsed (In case we want
+ * to update an outside value)
+ */
+Notification **parse_python_notification_dict(PyObject *dict, long *length);
 
 /**
  * Given all the decisions, compute the scores for every round using the

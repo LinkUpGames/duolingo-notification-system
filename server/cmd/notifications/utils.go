@@ -59,12 +59,20 @@ func computeNotificationDecay(notifications []*Notification, penalty float32, fa
 
 // computeSoftmaxProb Compute the probability for the notifications using softmax
 func computeSoftmaxProb(notifications []*Notification, explore float64) {
-	for _, notification := range notifications {
+	expValues := make([]float64, len(notifications))
+	sumExp := 0.0
+
+	// Compute Exponential Values
+	for i, notification := range notifications {
 		value := notification.Score / explore
 
-		probability := math.Exp(value)
+		expValues[i] = math.Exp(value)
+		sumExp += expValues[i]
+	}
 
-		notification.Probability = probability
+	// Normalize
+	for i, notification := range notifications {
+		notification.Probability = expValues[i] / sumExp
 	}
 }
 

@@ -253,12 +253,27 @@ Notification **compute_scores(Decision **decisions, long length) {
   for (size_t i = 0; i < length; i++) {
     Decision *decision = decisions[i];
 
-    int probabilities_length = decision->probabilities_length;
+    int was_selected = decision->selected;
+    char *selected_notification_id = decision->notification_id;
 
-    for (size_t j = 0; j < probabilities_length; j++) {
+    long notification_length = decision->probabilities_length;
+
+    for (size_t j = 0; j < notification_length; j++) {
       Notification *notification = decision->probabilities[j];
+      double weight = 1 / notification->probability;
+      double value = was_selected * weight;
 
-      printf("Notification Probability: [%f] | ", notification->probability);
+      if (strcmp(notification->id, selected_notification_id) == 0) {
+        //  This is the notificaiton that was selected
+
+        // m_plus_sum[id] += value * weight
+        // m_plus_count[id] += weight
+
+      } else {
+        // Not selected, reweight score
+        // m_minus_sum[id] += value * weight
+        // m_minus_count[id] += weight
+      }
     }
 
     printf("\nDecision: [%s]\n", decision->id);

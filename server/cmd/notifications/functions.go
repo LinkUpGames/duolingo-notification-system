@@ -27,10 +27,11 @@ func SelectNotifcation(userID string, variables *cmd.Variables, db *db.DB) *Noti
 	notification := selectRandom(notifications)
 
 	// Log the decision
-	err := addDecisionLog(db, notification.ID, notifications)
+	decisionID, err := addDecisionLog(db, notification.ID, notifications)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error with adding log: %s", err.Error())
 	}
+	notification.DecisionID = decisionID
 
 	return notification
 }

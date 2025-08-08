@@ -23,6 +23,7 @@ type Notification struct {
 	Title       string  `json:"title"`
 	Description string  `json:"description"`
 	Days        int     `json:"-"`
+	DecisionID  string  `json:"decision_id"`
 }
 
 // getNotifications Get the notifications from the database
@@ -77,7 +78,7 @@ func computeSoftmaxProb(notifications []*Notification, explore float64) {
 }
 
 // addDecisionLog Add the selected notification to the table that saves the decision logs
-func addDecisionLog(db *db.DB, selected string, notifications []*Notification) error {
+func addDecisionLog(db *db.DB, selected string, notifications []*Notification) (string, error) {
 	// Create the decision log
 	id := uuid.New().String()
 	now := time.Now().UnixMilli()
@@ -106,14 +107,14 @@ func addDecisionLog(db *db.DB, selected string, notifications []*Notification) e
 			success := db.SetEntry(query)
 
 			if !success {
-				return errors.New("error inserting probability log for decision id: " + id)
+				return "", errors.New("error inserting probability log for decision id: " + id)
 			}
 		}
 	} else {
-		return errors.New("error inserting decision log")
+		return "", errors.New("error inserting decision log")
 	}
 
-	return nil
+	return id, nil
 }
 
 // createNotification Creates a notification object

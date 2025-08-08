@@ -3,19 +3,23 @@
 ## Environment File
 
 ```bash
-# .env
 # Database
-POSTGRES_DB=database
-POSTGRES_USER=dev
-POSTGRES_PASSWORD=0000
-POSTGRES_PORT=8000
+export POSTGRES_DB=database
+export POSTGRES_USER=dev
+export POSTGRES_PASSWORD=0000
+export POSTGRES_PORT=8000
 
 # Server Vars
-SERVER_PORT=3000
+export SERVER_PORT=3000
 
 # Algorithm
-DEFAULT_REWARD="0.5"
-DEFAULT_DELTA="30"
-LEARNING_RATE="0.1"
-TEMPERATURE="0.5"
+
+# Defaults
+export DEFAULT_SCORE="0.5"
+
+# History Recency Penalty
+export PENALTY="0.02"
+export FACTOR=10
+export CUTOFF=10
+export EXPLORE="1.2"
 ```

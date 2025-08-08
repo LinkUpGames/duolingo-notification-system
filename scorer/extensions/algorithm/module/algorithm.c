@@ -219,3 +219,79 @@ PyObject *return_arms(Arm **arms, int length) {
 
   return py_list;
 }
+
+Decision *create_decision(char const *id, char const *notification_id,
+                          int selected) {
+  // Allocate
+  Decision *decision = (Decision *)malloc(sizeof(Decision));
+
+  // Check for memory allocation
+  if (decision == NULL) {
+    return NULL;
+  }
+
+  // Copy Values
+  decision->id = strdup(id);
+  decision->notification_id = strdup(notification_id);
+  decision->selected = selected;
+
+  // Set to 0
+  decision->probabilities = NULL;
+  decision->probabilities_length = 0;
+
+  return decision;
+}
+
+void free_decision(Decision *decision) {
+  if (decision->id != NULL) {
+    free(decision->id);
+    decision->id = NULL;
+  }
+
+  if (decision->notification_id != NULL) {
+    free(decision->notification_id);
+    decision->notification_id = NULL;
+  }
+
+  if (decision->probabilities != NULL) {
+    int length = decision->probabilities_length;
+
+    // Free all structs
+    for (size_t i = 0; i < length; i++) {
+      if (decision->probabilities[i] != NULL) {
+        free_notification(decision->probabilities[i]);
+        decision->probabilities[i] = NULL;
+      }
+    }
+
+    // Free array
+    free(decision->probabilities);
+    decision->probabilities = NULL;
+  }
+
+  free(decision);
+}
+
+Notification *create_notification(char const *id, float score,
+                                  float probability) {
+  Notification *notification = (Notification *)malloc(sizeof(Notification));
+
+  if (notification == NULL) {
+    return NULL;
+  }
+
+  notification->id = strdup(id);
+  notification->probability = probability;
+  notification->score = score;
+
+  return notification;
+}
+
+void free_notification(Notification *notification) {
+  if (notification->id != NULL) {
+    free(notification->id);
+    notification->id = NULL;
+  }
+
+  free(notification);
+}

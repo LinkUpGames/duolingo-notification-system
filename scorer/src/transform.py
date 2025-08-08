@@ -21,7 +21,7 @@ def parse_decision(decision, probabilities, event):
         **decision,
         "probabilities": event_dict,
         "selected": event["selected"],
-        "response_time": event["timestamp"],
+        "response_timestamp": event["timestamp"],
     }
 
     return decision_dict

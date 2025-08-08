@@ -2,6 +2,26 @@
 #include "algorithm.h"
 #include <Python.h>
 
+/**
+ * Wrapper for the python method that computes the scores given a list of
+ * decision logs
+ * @param self The calling object
+ * @param args The argument list
+ */
+static PyObject *compute_scores_method(PyObject *self, PyObject *args) {
+  PyObject *list;
+
+  // Parse arguments
+  if (!PyArg_ParseTuple(args, "O!", &PyList_Type, &list)) {
+    PyErr_SetString(PyExc_TypeError, "Expected: list[Decision]");
+
+    // Return null
+    Py_RETURN_NONE;
+  }
+
+  return NULL;
+}
+
 static PyObject *update_scores_method(PyObject *self, PyObject *args) {
   PyObject *input_list;
   const char *chosen_arm;
@@ -36,6 +56,8 @@ static PyObject *update_scores_method(PyObject *self, PyObject *args) {
 static PyMethodDef scorer_methods[] = {
     {"update_scores", update_scores_method, METH_VARARGS,
      "Print hello message."},
+    {"compute_scores", compute_scores_method, METH_VARARGS,
+     "Compute the scores for the notification given a list of decisions"},
     {NULL, NULL, 0, NULL},
 };
 

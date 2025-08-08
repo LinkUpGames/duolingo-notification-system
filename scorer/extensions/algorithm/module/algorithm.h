@@ -3,16 +3,6 @@
 
 #include <Python.h>
 
-// An arm that corresponds to a notification to be there
-typedef struct Arm {
-  // The name of the arm
-  // NOTE: You must free this once you are done
-  char *name;
-
-  // The reward [0,1] for the arm
-  float reward;
-} Arm;
-
 // Notification The notification structure used for
 typedef struct Notification {
   // Id of the notification
@@ -113,5 +103,13 @@ Decision **parse_python_list(PyObject *list, Py_ssize_t length);
  * @param obj The python object
  */
 Decision *parse_python_obj(PyObject *obj);
+
+/**
+ * Given all the decisions, compute the scores for every round using the
+ * decisions array
+ * @param decisions The decision array
+ * @param length The lengthof the array
+ */
+Notification **compute_scores(Decision **decisions, long length);
 
 #endif

@@ -22,6 +22,9 @@ static PyObject *compute_scores_method(PyObject *self, PyObject *args) {
   // Parse the list
   Py_ssize_t length = PyList_Size(list);
   Decision **decisions = parse_python_list(list, length);
+
+  // Compute Scores
+  compute_scores(decisions, length);
   free_decision_list(decisions, length);
 
   Py_RETURN_NONE;

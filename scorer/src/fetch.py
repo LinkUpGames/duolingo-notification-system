@@ -2,6 +2,8 @@ import requests
 import json
 import os
 
+import transform
+
 # Get environment variables
 PORT = os.environ["SERVER_PORT"]
 SERVER = "localhost"
@@ -57,19 +59,19 @@ def get_decision_event(id):
     return event
 
 
-users = get_users()
-
-for user in users:
-    decisions = get_user_decisions(user["id"])
+def get_decisions(user_id):
+    """
+    Get all of the decisions and there corresponding parts for user
+    """
+    logs = []  # The decisions as a log
+    decisions = get_user_decisions(user_id)
 
     for decision in decisions:
-        print(user)
-        print(decision)
-
         probabilities = get_decision_probabilities(decision["id"])
         event = get_decision_event(decision["id"])
 
-        print(probabilities)
+        log = transform.parse_decision(decision, probabilities, event)
 
-        print("Events: ")
-        print(event)
+        logs.append(log)
+
+    return logs

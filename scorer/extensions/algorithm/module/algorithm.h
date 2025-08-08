@@ -13,6 +13,16 @@ typedef struct Arm {
   float reward;
 } Arm;
 
+// Notification The notification structure used for
+typedef struct Notification {
+  // Id of the notification
+  char *id;
+
+  // The score for the notification
+  float score;
+
+} Notification;
+
 /**
  * Update the scores of each arm given the prior chosen arm
  * @param arms Array with each arm

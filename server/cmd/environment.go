@@ -48,6 +48,11 @@ func SetupEnvironment() *Variables {
 		f = 10
 	}
 
+	e, err := strconv.ParseFloat(os.Getenv("EXPLORE"), 32)
+	if err != nil {
+		e = 1.2
+	}
+
 	env := &Variables{
 		PostgresUser:     os.Getenv("POSTGRES_USER"),
 		PostgresDB:       os.Getenv("POSTGRES_DB"),
@@ -58,6 +63,7 @@ func SetupEnvironment() *Variables {
 		CutOff:           int(c),
 		Penalty:          float32(p),
 		Factor:           float32(f),
+		Explore:          float32(e),
 	}
 
 	return env

@@ -219,6 +219,9 @@ Decision *parse_python_obj(PyObject *obj) {
 }
 
 Notification **compute_scores(Decision **decisions, long length) {
+  // TODO: Have to add the hashmap where the notification get's updated to
+  // This has to change
+
   for (size_t i = 0; i < length; i++) {
     Decision *decision = decisions[i];
 

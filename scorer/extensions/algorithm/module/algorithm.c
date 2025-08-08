@@ -242,6 +242,12 @@ Decision *create_decision(char const *id, char const *notification_id,
   return decision;
 }
 
+Decision **create_decision_list(long length) {
+  Decision **decisions = (Decision **)calloc(length, sizeof(Decision *));
+
+  return decisions;
+}
+
 void free_decision(Decision *decision) {
   if (decision->id != NULL) {
     free(decision->id);
@@ -294,4 +300,38 @@ void free_notification(Notification *notification) {
   }
 
   free(notification);
+}
+
+Decision **parse_python_list(PyObject *list) {
+  // Get the length of the list
+  Py_ssize_t length = PyList_Size(list);
+
+  // Initialize the decision array
+  Decision **decisions = create_decision_list(length);
+  if (decisions == NULL) {
+    PyErr_NoMemory();
+  }
+
+  // Iterate through the list
+  for (Py_ssize_t i = 0; i < length; i++) {
+    PyObject *item = PyList_GetItem(list, i);
+
+    // Check that the item is an object
+    if (!PyDict_Check(item)) {
+      PyErr_Format(PyExc_TypeError, "Element %zd is not an object", i);
+      free_decision_list(decisions, length);
+
+      return NULL;
+    }
+  }
+
+  return decisions;
+}
+
+void free_decision_list(Decision **decisions, long length) {
+  if (decisions != NULL) {
+    for (size_t i = 0; i < length; i++) {
+      // Free the decision
+    }
+  }
 }

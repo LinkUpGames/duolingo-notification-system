@@ -16,3 +16,7 @@ func GetDecisionProbabilities(id string, db *db.DB) []*DecisionProbabilityLog {
 func GetDecisionEvent(id string, db *db.DB) *EventLog {
 	return getDecisionEvent(id, db)
 }
+
+func CreateDecisionEvent(decisionID string, selected bool, timestamp int64, db *db.DB) bool {
+	return createDecisionEvent(decisionID, selected, timestamp, db)
+}

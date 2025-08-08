@@ -3,9 +3,11 @@ package handlers
 import (
 	"net/http"
 	"server/cmd"
+	"server/cmd/events"
 	"server/cmd/notifications"
 	"server/cmd/user"
 	"server/db"
+	"strconv"
 )
 
 // SendNotificationHandler Select an arm based on the user
@@ -37,5 +39,36 @@ func SendNotificationHandler(ctx *cmd.AppContext, w http.ResponseWriter, r *http
 		w.WriteHeader(http.StatusOK)
 
 		w.Write(marhal)
+	}
+}
+
+// AcceptNotificationHandler Acceept the notification and update the database
+func AcceptNotificationHandler(ctx *cmd.AppContext, w http.ResponseWriter, r *http.Request) {
+	// Check and make sure that it's a POST request
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Context
+	db := ctx.Ctx.Value(cmd.DATABASE).(*db.DB)
+
+	// Parameters
+	decisionID := r.URL.Query().Get("decision_id")
+	selected, err := strconv.ParseBool(r.URL.Query().Get("selected"))
+	if err != nil {
+		selected = false
+	}
+	timestamp, err := strconv.ParseInt(r.URL.Query().Get("timestamp"), 10, 64)
+	if err != nil {
+		timestamp = -1
+	}
+
+	success := events.CreateDecisionEvent(decisionID, selected, timestamp, db)
+
+	if success {
+		w.WriteHeader(http.StatusOK)
+	} else {
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 }

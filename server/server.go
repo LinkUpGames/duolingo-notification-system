@@ -21,6 +21,7 @@ func main() {
 	http.HandleFunc("/get_user_decisions", handlers.Middleware(ctx, handlers.GetUserDecisionsHandler))
 	http.HandleFunc("/get_decision_probabilities", handlers.Middleware(ctx, handlers.GetDecisionProbabilitiesHandler))
 	http.HandleFunc("/get_decision_event", handlers.Middleware(ctx, handlers.GetDecisionEventHandler))
+	http.HandleFunc("/accept_notification", handlers.Middleware(ctx, handlers.AcceptNotificationHandler))
 
 	// Start Server
 	fmt.Printf("Listening on port %s\n", PORT)

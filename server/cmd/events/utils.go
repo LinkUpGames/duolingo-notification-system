@@ -157,3 +157,12 @@ func createDecisionProbability(id string, decisionID string, userID string, noti
 		Probability:    probability,
 	}
 }
+
+// createDecisionEvent Create an event log for a decision
+// This happens when the user has accepted a notification
+func createDecisionEvent(decisionID string, selected bool, timestamp int64, db *db.DB) bool {
+	query := fmt.Sprintf("INSERT INTO events (decision_id, selected, timestamp) VALUES ('%s', %t, %d);", decisionID, selected, timestamp)
+	status := db.SetEntry(query)
+
+	return status
+}

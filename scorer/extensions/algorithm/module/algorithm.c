@@ -245,6 +245,14 @@ Decision *create_decision(char const *id, char const *notification_id,
 Decision **create_decision_list(long length) {
   Decision **decisions = (Decision **)calloc(length, sizeof(Decision *));
 
+  if (decisions == NULL) {
+    return NULL;
+  }
+
+  for (size_t i = 0; i < length; i++) {
+    decisions[i] = NULL;
+  }
+
   return decisions;
 }
 
@@ -262,16 +270,11 @@ void free_decision(Decision *decision) {
   if (decision->probabilities != NULL) {
     int length = decision->probabilities_length;
 
-    // Free all structs
-    for (size_t i = 0; i < length; i++) {
-      if (decision->probabilities[i] != NULL) {
-        free_notification(decision->probabilities[i]);
-        decision->probabilities[i] = NULL;
-      }
-    }
+    // Free all probabilities struct pointers
+    free_notification_list(decision->probabilities,
+                           decision->probabilities_length);
 
-    // Free array
-    free(decision->probabilities);
+    // Null pointer
     decision->probabilities = NULL;
   }
 
@@ -302,14 +305,52 @@ void free_notification(Notification *notification) {
   free(notification);
 }
 
-Decision **parse_python_list(PyObject *list) {
-  // Get the length of the list
-  Py_ssize_t length = PyList_Size(list);
+void free_decision_list(Decision **decisions, long length) {
+  if (decisions != NULL) {
+    for (size_t i = 0; i < length; i++) {
+      // Free the decision
+      free_decision(decisions[i]);
+      decisions[i] = NULL;
+    }
 
+    free(decisions);
+    decisions = NULL;
+  }
+}
+
+Notification **create_notification_list(long length) {
+  Notification **notifications =
+      (Notification **)calloc(length, sizeof(Notification *));
+
+  if (notifications == NULL) {
+    return NULL;
+  }
+
+  for (size_t i = 0; i < length; i++) {
+    notifications[i] = NULL;
+  }
+
+  return notifications;
+}
+
+void free_notification_list(Notification **notifications, int length) {
+  if (notifications != NULL) {
+    for (size_t i = 0; i < length; i++) {
+      free_notification(notifications[i]);
+      notifications[i] = NULL;
+    }
+
+    free(notifications);
+  }
+}
+
+Decision **parse_python_list(PyObject *list, Py_ssize_t length) {
   // Initialize the decision array
   Decision **decisions = create_decision_list(length);
   if (decisions == NULL) {
     PyErr_NoMemory();
+
+    return NULL;
   }
 
   // Iterate through the list
@@ -323,15 +364,103 @@ Decision **parse_python_list(PyObject *list) {
 
       return NULL;
     }
+
+    // Create the decision struct
+    Decision *decision = parse_python_obj(item);
+    if (decision == NULL) {
+      PyErr_Format(PyExc_ValueError, "Error with parsing decision object");
+
+      return NULL;
+    }
+
+    decisions[i] = decision;
   }
 
   return decisions;
 }
 
-void free_decision_list(Decision **decisions, long length) {
-  if (decisions != NULL) {
-    for (size_t i = 0; i < length; i++) {
-      // Free the decision
-    }
+Decision *parse_python_obj(PyObject *obj) {
+  // Retrieve field values
+  PyObject *id_obj = PyDict_GetItemString(obj, "id");
+  PyObject *notification_obj = PyDict_GetItemString(obj, "notification_id");
+  PyObject *selected_obj = PyDict_GetItemString(obj, "selected");
+
+  if (!id_obj || !notification_obj || !selected_obj) {
+    PyErr_Format(PyExc_ValueError, "Invalid or missing keys in dict!");
+    return NULL;
   }
+
+  // Cast variables
+  const char *id = PyUnicode_AsUTF8(id_obj);
+  const char *notification_id = PyUnicode_AsUTF8(notification_obj);
+  const int selected = selected_obj == Py_True ? 1 : 0;
+
+  // Convert to notification array
+  PyObject *probabilities_obj = PyDict_GetItemString(obj, "probabilities");
+  if (!PyDict_Check(probabilities_obj)) {
+    PyErr_Format(PyExc_ValueError, "probabilities is not a dictionary!");
+    return NULL;
+  }
+
+  PyObject *keys = PyDict_Keys(probabilities_obj); // Create a new list
+  if (!keys) {
+    PyErr_Format(PyExc_ValueError, "Could not get keys");
+    return NULL;
+  }
+
+  Py_ssize_t keys_length = PyList_Size(keys);
+  Notification **notifications = create_notification_list(keys_length);
+  if (notifications == NULL) {
+    PyErr_NoMemory();
+    Py_DECREF(keys);
+    return NULL;
+  }
+
+  // Iterate through the keys
+  for (Py_ssize_t i = 0; i < keys_length; i++) {
+    // Get notification id
+    PyObject *key_obj = PyList_GetItem(keys, i);
+
+    // Get probability value
+    PyObject *value_obj = PyDict_GetItem(probabilities_obj, key_obj);
+
+    const char *notification_id = PyUnicode_AsUTF8(key_obj);
+    const float value = PyFloat_AsDouble(value_obj);
+
+    // Error Check
+    if (!notification_id || !value) {
+      Py_DECREF(keys); // remove reference of newly created list
+      free_notification_list(notifications, keys_length);
+      PyErr_Format(PyExc_ValueError, "Could not parse notification id or "
+                                     "probability from probability dict!");
+
+      return NULL;
+    }
+
+    // Create Notification
+    Notification *notification = create_notification(notification_id, 0, value);
+    if (notification == NULL) {
+      Py_DECREF(keys);
+      free_notification_list(notifications, keys_length);
+      PyErr_NoMemory();
+
+      return NULL;
+    }
+
+    // Add the notification reference
+    notifications[i] = notification;
+  }
+  Py_DECREF(keys); // free at the end
+
+  // Create decision struct
+  Decision *decision = create_decision(id, notification_id, selected);
+  if (decision == NULL) {
+    free_notification_list(notifications, keys_length);
+    return NULL;
+  }
+
+  decision->probabilities = notifications;
+  decision->probabilities_length = keys_length;
+
+  return decision;
 }

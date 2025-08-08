@@ -20,9 +20,11 @@ static PyObject *compute_scores_method(PyObject *self, PyObject *args) {
   }
 
   // Parse the list
-  Decision **decision = parse_python_list(list);
+  Py_ssize_t length = PyList_Size(list);
+  Decision **decisions = parse_python_list(list, length);
+  free_decision_list(decisions, length);
 
-  return NULL;
+  Py_RETURN_NONE;
 }
 
 static PyMethodDef scorer_methods[] = {

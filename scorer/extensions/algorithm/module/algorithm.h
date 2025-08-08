@@ -84,6 +84,18 @@ Notification *create_notification(char const *id, float score,
                                   float probability);
 
 /**
+ * Create a notificaiton list of length
+ * @param length The length of the array
+ */
+Notification **create_notification_list(long length);
+
+/**
+ * Free the notification list
+ * @param length The length of the array
+ */
+void free_notification_list(Notification **notifications, int length);
+
+/**
  * Free the memory for the notification struct that was allocated
  * @param notification The notification to free
  */
@@ -93,6 +105,13 @@ void free_notification(Notification *notification);
  * Parse a python list and return an array with Decision structs
  * @param list The python list
  */
-Decision **parse_python_list(PyObject *list);
+Decision **parse_python_list(PyObject *list, Py_ssize_t length);
+
+/**
+ * Parse a python dict in the form of an object and return the decision log from
+ * it
+ * @param obj The python object
+ */
+Decision *parse_python_obj(PyObject *obj);
 
 #endif

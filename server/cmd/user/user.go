@@ -28,7 +28,10 @@ func GetUser(db *db.DB, id string) *User {
 	_, ok := user["id"]
 
 	if ok {
-		name := user["name"].(string)
+		name, ok := user["name"].(string)
+		if !ok {
+			name = ""
+		}
 
 		return CreateUser(id, name)
 	} else {
@@ -75,8 +78,15 @@ func GetUsers(db *db.DB) []*User {
 
 	// Map  to struct
 	for _, result := range results {
-		id := result["id"].(string)
-		name := result["name"].(string)
+		id, ok := result["id"].(string)
+		if !ok {
+			id = ""
+		}
+
+		name, ok := result["name"].(string)
+		if !ok {
+			name = ""
+		}
 
 		user := &User{
 			ID:   id,

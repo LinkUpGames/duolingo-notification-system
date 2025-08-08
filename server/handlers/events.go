@@ -16,7 +16,7 @@ func GetDecisionProbabilitiesHandler(ctx *cmd.AppContext, w http.ResponseWriter,
 	id := r.URL.Query().Get("decision_id")
 
 	// Fetch
-	logs := events.GetDecisionEvent(id, db)
+	logs := events.GetDecisionProbabilities(id, db)
 
 	// Marshall
 	jsonByte, err := json.Marshal(logs)

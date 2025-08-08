@@ -137,15 +137,29 @@ func getUserNotifications(userID string, db *db.DB, variables *cmd.Variables) []
 	// Go through all the ids of notification and query stored data associated with the user
 	now := time.Now().UnixMilli()
 	for _, dbNotification := range dbNotifications {
-		id := dbNotification["id"].(string)
-		title := dbNotification["title"].(string)
-		description := dbNotification["description"].(string)
+		id, ok := dbNotification["id"].(string)
+		if !ok {
+			id = ""
+		}
+
+		title, ok := dbNotification["title"].(string)
+		if !ok {
+			title = ""
+		}
+
+		description, ok := dbNotification["description"].(string)
+		if !ok {
+			description = ""
+		}
 
 		var notification *Notification
 		var score map[string]any = nil
 
 		for _, _score := range scores {
-			notificationID := _score["id"]
+			notificationID, ok := _score["id"]
+			if !ok {
+				notificationID = ""
+			}
 
 			if notificationID == id {
 				score = _score
@@ -155,9 +169,20 @@ func getUserNotifications(userID string, db *db.DB, variables *cmd.Variables) []
 
 		// If the score is not nil then populate with database values
 		if score != nil {
-			reward := score["reward"].(float64)
-			timestamp := score["timestamp"].(int)
-			selected := score["selected"].(int)
+			reward, ok := score["reward"].(float64)
+			if !ok {
+				reward = 0
+			}
+
+			timestamp, ok := score["timestamp"].(int)
+			if !ok {
+				timestamp = -1
+			}
+
+			selected, ok := score["selected"].(int)
+			if !ok {
+				selected = 0
+			}
 
 			diff := timestamp - int(now)
 			diffAbs := int(math.Abs(float64(diff)))

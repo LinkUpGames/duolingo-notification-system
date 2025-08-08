@@ -37,10 +37,25 @@ func getDecisions(user string, db *db.DB) []*DecisionLog {
 	entries := db.GetEntries(query)
 
 	for _, entry := range entries {
-		id := entry["id"].(string)
-		user := entry["user_id"].(string)
-		notification := entry["notification_id"].(string)
-		timestamp := entry["timestamp"].(int64)
+		id, ok := entry["id"].(string)
+		if !ok {
+			id = ""
+		}
+
+		user, ok := entry["user_id"].(string)
+		if !ok {
+			user = ""
+		}
+
+		notification, ok := entry["notification_id"].(string)
+		if !ok {
+			notification = ""
+		}
+
+		timestamp, ok := entry["timestamp"].(int64)
+		if !ok {
+			timestamp = -1
+		}
 
 		decision := createDecision(id, user, notification, timestamp)
 
@@ -57,8 +72,15 @@ func getDecisionEvent(id string, db *db.DB) *EventLog {
 	query := fmt.Sprintf("SELECT * FROM events WHERE decision_id = '%s'", id)
 	entry := db.GetEntry(query)
 
-	selected := entry["selected"].(bool)
-	timestamp := entry["timestamp"].(int64)
+	selected, ok := entry["selected"].(bool)
+	if !ok {
+		selected = false
+	}
+
+	timestamp, ok := entry["timestamp"].(int64)
+	if !ok {
+		timestamp = -1
+	}
 
 	event = createEventLog(id, selected, timestamp)
 
@@ -69,15 +91,34 @@ func getDecisionEvent(id string, db *db.DB) *EventLog {
 func getDecisionProbabilities(id string, db *db.DB) []*DecisionProbabilityLog {
 	probabilities := []*DecisionProbabilityLog{}
 
-	query := fmt.Sprintf("SELECT * FROM probabilities WHERE DECISION_ID = %s", id)
+	query := fmt.Sprintf("SELECT * FROM probabilities WHERE DECISION_ID = '%s'", id)
 	entries := db.GetEntries(query)
 
 	for _, entry := range entries {
-		id := entry["id"].(string)
-		decisionID := entry["decision_id"].(string)
-		userID := entry["user_id"].(string)
-		notificaitonID := entry["notification_id"].(string)
-		probability := entry["probability"].(float64)
+		id, ok := entry["id"].(string)
+		if !ok {
+			id = ""
+		}
+
+		decisionID, ok := entry["decision_id"].(string)
+		if !ok {
+			decisionID = ""
+		}
+
+		userID, ok := entry["user_id"].(string)
+		if !ok {
+			userID = ""
+		}
+
+		notificaitonID, ok := entry["notification_id"].(string)
+		if !ok {
+			notificaitonID = ""
+		}
+
+		probability, ok := entry["probability"].(float64)
+		if !ok {
+			probability = 0
+		}
 
 		log := createDecisionProbability(id, decisionID, userID, notificaitonID, probability)
 

@@ -28,7 +28,7 @@ func SetupContext() *AppContext {
 	ctx = context.WithValue(ctx, VARIABLES, v)
 
 	// Setup the database
-	db := db.Database(v.POSTGRES_DB, v.POSTGRES_USER, v.POSTGRES_PASSWORD, v.POSTGRES_PORT)
+	db := db.Database(v.PostgresDB, v.PostgresUser, v.PostgresPassword, v.PostgresPort)
 	ctx = context.WithValue(ctx, DATABASE, db)
 
 	return &AppContext{

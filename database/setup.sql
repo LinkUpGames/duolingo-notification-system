@@ -10,8 +10,7 @@ CREATE TABLE IF NOT EXISTS notifications (
 CREATE TABLE IF NOT EXISTS scores (
   id TEXT NOT NULL, -- The id of the notification
   user_id TEXT NOT NULL, -- The user id that is used for querying
-  reward FLOAT NOT NULL, -- The score for this notification
-  selected INT NOT NULL, -- The amount of times that the notification was selected
+  score FLOAT NOT NULL, -- The score for this notification
   timestamp BIGINT, -- milliseconds of the last time this score was selected
   PRIMARY KEY (id, user_id),
   FOREIGN KEY (id) REFERENCES notifications (id)

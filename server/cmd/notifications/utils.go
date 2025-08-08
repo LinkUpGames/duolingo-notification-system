@@ -22,7 +22,7 @@ type Notification struct {
 	Probability float64 `json:"probability"`
 	Title       string  `json:"title"`
 	Description string  `json:"description"`
-	Delta       int     `json:"-"`
+	Days        int     `json:"-"`
 }
 
 // getNotifications Get the notifications from the database
@@ -42,29 +42,29 @@ func getNotifcationScores(db *db.DB, userID string) []map[string]any {
 	return results
 }
 
-// Compute the Exponential recovering difference for the scores
-// This will modify the scores of the actual notification and return the total value sum value of the Scores
-func computeExpScores(notifications []*Notification, temperature float64, maxScore float64) float64 {
-	total := 0.0
-
+// computeNotificationDecay Compute the decay based on the hyperparamaters
+// The penalty and factor control the penalty size for the notification score
+// The cutoff controls the decay speed (larger size slower decay)
+func computeNotificationDecay(notifications []*Notification, penalty float32, factor float32, cutoff int) {
 	for _, notification := range notifications {
-		norm := (notification.Score - maxScore) / temperature
-		val := norm * float64(notification.Delta)
-		score := math.Exp(val)
-		notification.Score = score
+		base := float64(penalty) * float64(factor)
 
-		total += score
+		power := float64(notification.Days) / float64(cutoff)
+
+		decay := math.Pow(base, power)
+
+		notification.Score -= decay
 	}
-
-	return total
 }
 
-// computeProbabilities Compute the probabilities for all notifications to be sent to the user
-func computeProbabilities(notifications []*Notification, total float64) {
+// computeSoftmaxProb Compute the probability for the notifications using softmax
+func computeSoftmaxProb(notifications []*Notification, explore float64) {
 	for _, notification := range notifications {
-		val := notification.Score / total
+		value := notification.Score / explore
 
-		notification.Probability = val
+		probability := math.Exp(value)
+
+		notification.Probability = probability
 	}
 }
 
@@ -109,14 +109,13 @@ func addDecisionLog(db *db.DB, selected string, notifications []*Notification) e
 }
 
 // createNotification Creates a notification object
-func createNotification(id string, userID string, score float64, timestamp int, selected int, delta int, probability float64, title string, description string) *Notification {
+func createNotification(id string, userID string, score float64, timestamp int, days int, probability float64, title string, description string) *Notification {
 	notification := &Notification{
 		ID:          id,
 		UserID:      userID,
 		Score:       score,
 		Timestamp:   timestamp,
-		Selected:    selected,
-		Delta:       delta,
+		Days:        days,
 		Probability: probability,
 		Title:       title,
 		Description: description,
@@ -135,7 +134,7 @@ func getUserNotifications(userID string, db *db.DB, variables *cmd.Variables) []
 	scores := getNotifcationScores(db, userID)
 
 	// Go through all the ids of notification and query stored data associated with the user
-	now := time.Now().UnixMilli()
+	now := time.Now()
 	for _, dbNotification := range dbNotifications {
 		id, ok := dbNotification["id"].(string)
 		if !ok {
@@ -169,9 +168,9 @@ func getUserNotifications(userID string, db *db.DB, variables *cmd.Variables) []
 
 		// If the score is not nil then populate with database values
 		if score != nil {
-			reward, ok := score["reward"].(float64)
+			notificationScore, ok := score["score"].(float64)
 			if !ok {
-				reward = 0
+				notificationScore = float64(variables.Score)
 			}
 
 			timestamp, ok := score["timestamp"].(int)
@@ -179,17 +178,13 @@ func getUserNotifications(userID string, db *db.DB, variables *cmd.Variables) []
 				timestamp = -1
 			}
 
-			selected, ok := score["selected"].(int)
-			if !ok {
-				selected = 0
-			}
+			milliseconds := time.UnixMilli(int64(timestamp))
 
-			diff := timestamp - int(now)
-			diffAbs := int(math.Abs(float64(diff)))
+			days := int(now.Sub(milliseconds).Hours() / 24)
 
-			notification = createNotification(id, userID, reward, timestamp, selected, diffAbs, 0, title, description)
+			notification = createNotification(id, userID, notificationScore, timestamp, days, 0, title, description)
 		} else {
-			notification = createNotification(id, userID, float64(variables.DEFAULT_REWARD), -1, 0, int(variables.DEFAULT_DELTA), 0, title, description)
+			notification = createNotification(id, userID, float64(variables.Score), -1, variables.CutOff, 0, title, description)
 		}
 
 		notifications = append(notifications, notification)

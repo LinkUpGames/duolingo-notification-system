@@ -14,21 +14,11 @@ func SelectNotifcation(userID string, variables *cmd.Variables, db *db.DB) *Noti
 	// Fetch the notifications and the scores for this user
 	notifications := getUserNotifications(userID, db, variables)
 
-	// Get the max score
-	var maxScore float64 = 0
-	for _, notification := range notifications {
-		score := notification.Score
+	// Calculte the recency delay
+	computeNotificationDecay(notifications, variables.Penalty, variables.Factor, variables.CutOff)
 
-		if score > maxScore {
-			maxScore = score
-		}
-	}
-
-	// Compute Exponentials with Recovering differnce
-	total := computeExpScores(notifications, float64(variables.TEMPERATURE), maxScore)
-
-	// Normalize to get the probabilities
-	computeProbabilities(notifications, total)
+	// Probabilities
+	computeSoftmaxProb(notifications, float64(variables.Explore))
 
 	// DEBUG: This is for debugging purposes only
 	printNotifications(notifications)

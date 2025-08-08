@@ -1,6 +1,3 @@
-from collections import defaultdict
-
-
 def parse_decision(decision, probabilities, event):
     """
     Parse a decision and create a dictionary with the following values
@@ -28,9 +25,3 @@ def parse_decision(decision, probabilities, event):
     }
 
     return decision_dict
-
-
-def parse_choices(logs):
-    """
-    Parse the choices where the notificaiton was selected and not select per round (decision log)
-    """

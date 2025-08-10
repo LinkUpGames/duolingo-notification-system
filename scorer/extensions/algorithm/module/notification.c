@@ -67,3 +67,5 @@ void free_notification_list(NotificationArray *notifications) {
     free(notifications);
   }
 }
+
+NotificationArray *parse_python_notification_list(PyObject *list) {}

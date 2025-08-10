@@ -70,4 +70,10 @@ void free_notification_list(NotificationArray *array);
  */
 void free_notification(Notification *notification);
 
+/**
+ * Parse a python list object and return a notification array struct
+ * @param list The list
+ */
+NotificationArray *parse_python_notification_list(PyObject *list);
+
 #endif

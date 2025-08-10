@@ -107,7 +107,12 @@ DecisionArray *parse_python_decision_list(PyObject *list) {
     }
 
     // Create the decision struct
-    // Decision *decision =
+    Decision *decision = parse_python_decision_obj(item);
+    if (decision == NULL) {
+      free_decision_list(array);
+
+      return NULL;
+    }
   }
 
   return array;

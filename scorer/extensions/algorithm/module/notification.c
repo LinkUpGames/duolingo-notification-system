@@ -103,7 +103,7 @@ NotificationArray *parse_python_notification_list(PyObject *list) {
     float score = PyFloat_AsDouble(score_obj);
     float probability = PyFloat_AsDouble(probability_obj);
 
-    if (!id || !score || !probability) {
+    if (!id_obj || !score_obj || !probability_obj) {
       PyErr_SetString(PyExc_ValueError, "Fields not present");
 
       return NULL;

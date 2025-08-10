@@ -50,22 +50,24 @@ DecisionArray *create_decision_list(long length) {
 }
 
 void free_decision(Decision *decision) {
-  if (decision->id != NULL) {
-    free(decision->id);
-    decision->id = NULL;
-  }
+  if (decision != NULL) {
+    if (decision->id != NULL) {
+      free(decision->id);
+      decision->id = NULL;
+    }
 
-  if (decision->notification_id != NULL) {
-    free(decision->notification_id);
-    decision->notification_id = NULL;
-  }
+    if (decision->notification_id != NULL) {
+      free(decision->notification_id);
+      decision->notification_id = NULL;
+    }
 
-  if (decision->probabilities != NULL) {
-    // Free all probabilities struct pointers
-    free_notification_list(decision->probabilities);
+    if (decision->probabilities != NULL) {
+      // Free all probabilities struct pointers
+      free_notification_list(decision->probabilities);
 
-    // Null pointer
-    decision->probabilities = NULL;
+      // Null pointer
+      decision->probabilities = NULL;
+    }
   }
 
   free(decision);

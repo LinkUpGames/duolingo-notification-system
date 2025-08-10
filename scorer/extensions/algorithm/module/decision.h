@@ -1,5 +1,5 @@
-#ifndef __DECISION_H
-#define __DECISION_H
+#ifndef DECISION_H
+#define DECISION_H
 
 #include "notification.h"
 #include <Python.h>

@@ -32,10 +32,13 @@ static PyObject *compute_scores_method(PyObject *self, PyObject *args) {
   // Compute Scores
   compute_scores(decisions, notifications);
 
+  PyObject *notification_result =
+      notification_list_to_python_list(notifications);
+
   free_decision_list(decisions);
   free_notification_list(notifications);
 
-  Py_RETURN_NONE;
+  return notification_result;
 }
 
 static PyMethodDef scorer_methods[] = {

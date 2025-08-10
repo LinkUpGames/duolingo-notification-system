@@ -91,4 +91,10 @@ NotificationArray *parse_python_notification_dict(PyObject *dict);
  */
 hashmap *create_notification_map_from_list(NotificationArray *notifications);
 
+/**
+ * Return a python object
+ * @param notifications The notification list
+ */
+PyObject *notification_list_to_python_list(NotificationArray *list);
+
 #endif

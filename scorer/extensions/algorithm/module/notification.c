@@ -139,3 +139,45 @@ hashmap *create_notification_map_from_list(NotificationArray *array) {
 
   return notifications;
 }
+
+PyObject *notification_list_to_python_list(NotificationArray *array) {
+  PyObject *list = PyList_New(array->length);
+  if (list == NULL) {
+    PyErr_NoMemory();
+
+    return NULL;
+  }
+
+  // Notification Array
+  for (size_t i = 0; i < array->length; i++) {
+    Notification *notification = array->array[i];
+
+    PyObject *dict = PyDict_New();
+    if (dict == NULL) {
+      PyErr_NoMemory();
+      Py_DECREF(list);
+
+      return NULL;
+    }
+
+    PyObject *id_obj = PyUnicode_FromString(notification->id);
+    PyObject *score_obj = PyFloat_FromDouble(notification->score);
+    PyObject *probability_obj = PyFloat_FromDouble(notification->probability);
+
+    if (!id_obj || !score_obj || !probability_obj) {
+      PyErr_NoMemory();
+      Py_DECREF(list);
+      Py_DECREF(dict);
+
+      return NULL;
+    }
+
+    PyDict_SetItemString(dict, "id", id_obj);
+    PyDict_SetItemString(dict, "score", score_obj);
+    PyDict_SetItemString(dict, "probability", probability_obj);
+
+    PyList_Append(list, dict);
+  }
+
+  return list;
+}

@@ -15,8 +15,6 @@ void compute_scores(DecisionArray *decisions,
   for (size_t i = 0; i < decisions->length; i++) {
     Decision *decision = decisions->array[i];
 
-    printf("decision: [%s] | selected: [%d] | Notification Id: [%s]\n",
-           decision->id, decision->selected, decision->notification_id);
     int was_selected = decision->selected;
     char *selected_notification_id = decision->notification_id;
 

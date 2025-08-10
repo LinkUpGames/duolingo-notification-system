@@ -1,4 +1,5 @@
 #include "notification.h"
+#include "map.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -120,4 +121,21 @@ NotificationArray *parse_python_notification_list(PyObject *list) {
   }
 
   return array;
+}
+
+hashmap *create_notification_map_from_list(NotificationArray *array) {
+  hashmap *notifications = hashmap_create();
+  if (notifications == NULL) {
+    return NULL;
+  }
+
+  // Add the notifications over
+  for (size_t i = 0; i < array->length; i++) {
+    Notification *notification = array->array[i];
+
+    hashmap_set(notifications, notification->id, strlen(notification->id),
+                (uintptr_t)notification);
+  }
+
+  return notifications;
 }

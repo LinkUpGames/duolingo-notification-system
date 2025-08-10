@@ -115,6 +115,8 @@ DecisionArray *parse_python_decision_list(PyObject *list) {
 
       return NULL;
     }
+
+    array->array[i] = decision;
   }
 
   return array;

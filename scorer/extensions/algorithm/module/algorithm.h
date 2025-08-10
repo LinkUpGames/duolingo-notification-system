@@ -9,8 +9,8 @@
  * Given all the decisions, compute the scores for every round using the
  * decisions array
  * @param decisions The decision array
- * @param length The lengthof the array
+ * @param notification The notification map
  */
-NotificationArray *compute_scores(DecisionArray *decision, long length);
+void compute_scores(DecisionArray *decisions, NotificationArray *notifications);
 
 #endif

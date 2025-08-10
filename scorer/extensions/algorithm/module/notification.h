@@ -1,6 +1,7 @@
 #ifndef NOTIFICATION_H
 #define NOTIFICATION_H
 
+#include "map.h"
 #include <Python.h>
 
 // Notification The notification structure used for
@@ -81,5 +82,13 @@ NotificationArray *parse_python_notification_list(PyObject *list);
  * @parma dict the dictionary object
  */
 NotificationArray *parse_python_notification_dict(PyObject *dict);
+
+/**
+ * The notification map from list
+ * NOTE: that this only create a reference to key and value, so you must free
+ * the source
+ * @param notifications The notificatio map
+ */
+hashmap *create_notification_map_from_list(NotificationArray *notifications);
 
 #endif

@@ -53,4 +53,5 @@ decisions: list = [
 
 notifications: list = [{"id": "n1", "score": 0, "probability": 0}]
 
-compute_scores(decisions, notifications)
+result = compute_scores(decisions, notifications)
+print(result)

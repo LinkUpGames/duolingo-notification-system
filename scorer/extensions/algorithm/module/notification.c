@@ -176,7 +176,7 @@ PyObject *notification_list_to_python_list(NotificationArray *array) {
     PyDict_SetItemString(dict, "score", score_obj);
     PyDict_SetItemString(dict, "probability", probability_obj);
 
-    PyList_Append(list, dict);
+    PyList_SetItem(list, i, dict);
   }
 
   return list;

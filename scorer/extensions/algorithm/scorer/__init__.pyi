@@ -13,7 +13,18 @@ class Decision(TypedDict):
     probabilities: dict[str, float]
     selected: bool
 
-def compute_scores(logs: list[Decision]) -> dict[str, float]:
+class Notification(TypedDict):
+    """
+    Notification object
+    """
+
+    id: str
+    score: float
+    probability: float
+
+def compute_scores(
+    logs: list[Decision], notifications: list[Notification]
+) -> dict[str, float]:
     """
     Compute the scores for the notification given the decisions in an array
 

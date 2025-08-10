@@ -45,9 +45,15 @@ NotificationArray *create_notification_list(long length) {
     return NULL;
   }
 
+  for (size_t i = 0; i < length; i++) {
+    notifications[i] = NULL;
+  }
+
   NotificationArray *array =
       (NotificationArray *)malloc(sizeof(NotificationArray));
   if (array == NULL) {
+    free(notifications);
+
     return NULL;
   }
   array->length = length;
@@ -68,4 +74,50 @@ void free_notification_list(NotificationArray *notifications) {
   }
 }
 
-NotificationArray *parse_python_notification_list(PyObject *list) {}
+NotificationArray *parse_python_notification_list(PyObject *list) {
+  Py_ssize_t length = PyList_Size(list);
+
+  NotificationArray *array = create_notification_list(length);
+  if (array == NULL) {
+    PyErr_NoMemory();
+
+    return NULL;
+  }
+
+  for (Py_ssize_t i = 0; i < length; i++) {
+    PyObject *obj = PyList_GetItem(list, i);
+
+    if (!PyDict_Check(obj)) {
+      free_notification_list(array);
+      PyErr_Format(PyExc_ValueError, "List item zd% is not an object!", obj);
+
+      return NULL;
+    }
+
+    // Parse Items
+    PyObject *id_obj = PyDict_GetItemString(obj, "id");
+    PyObject *score_obj = PyDict_GetItemString(obj, "score");
+    PyObject *probability_obj = PyDict_GetItemString(obj, "probability");
+
+    const char *id = PyUnicode_AsUTF8(id_obj);
+    float score = PyFloat_AsDouble(score_obj);
+    float probability = PyFloat_AsDouble(probability_obj);
+
+    if (!id || !score || !probability) {
+      PyErr_SetString(PyExc_ValueError, "Fields not present");
+
+      return NULL;
+    }
+
+    Notification *notification = create_notification(id, score, probability);
+    if (notification == NULL) {
+      free_notification_list(array);
+
+      return NULL;
+    }
+
+    array->array[i] = notification;
+  }
+
+  return array;
+}

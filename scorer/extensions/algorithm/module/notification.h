@@ -76,4 +76,10 @@ void free_notification(Notification *notification);
  */
 NotificationArray *parse_python_notification_list(PyObject *list);
 
+/**
+ * The notifications as a dict
+ * @parma dict the dictionary object
+ */
+NotificationArray *parse_python_notification_dict(PyObject *dict);
+
 #endif

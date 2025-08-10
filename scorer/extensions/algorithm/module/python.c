@@ -32,11 +32,6 @@ static PyObject *compute_scores_method(PyObject *self, PyObject *args) {
   // Compute Scores
   compute_scores(decisions, notifications);
 
-  for (size_t i = 0; notifications->length; i++) {
-    printf("Notificaion [%s] | Probability: [%f]\n",
-           notifications->array[i]->id, notifications->array[i]->probability);
-  }
-
   free_decision_list(decisions);
   free_notification_list(notifications);
 

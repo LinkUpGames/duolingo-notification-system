@@ -20,7 +20,6 @@ Decision *create_decision(char const *id, char const *notification_id,
 
   // Set to 0
   decision->probabilities = NULL;
-  decision->probabilities_length = 0;
 
   return decision;
 }
@@ -62,8 +61,6 @@ void free_decision(Decision *decision) {
   }
 
   if (decision->probabilities != NULL) {
-    int length = decision->probabilities_length;
-
     // Free all probabilities struct pointers
     free_notification_list(decision->probabilities);
 

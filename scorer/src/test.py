@@ -28,7 +28,7 @@ decisions: list = [
         "notification_id": "n3",
         "timestamp": 1633245600.0,
         "response_timestamp": 1633245610.0,
-        "probabilities": {"option_p": 0.5, "option_q": 0.5},
+        "probabilities": {"n1": 0.5, "n2": 0.5},
         "selected": True,
     },
     {
@@ -37,7 +37,7 @@ decisions: list = [
         "notification_id": "n2",
         "timestamp": 1633159200.0,
         "response_timestamp": 1633159210.0,
-        "probabilities": {"option_x": 0.8, "option_y": 0.2},
+        "probabilities": {"n1": 0.8, "n2": 0.2},
         "selected": False,
     },
     {
@@ -46,9 +46,11 @@ decisions: list = [
         "notification_id": "n1",
         "timestamp": 1633072800.0,
         "response_timestamp": 1633072810.0,
-        "probabilities": {"option_a": 0.3, "option_b": 0.7},
+        "probabilities": {"n1": 0.3, "n2": 0.7},
         "selected": True,
     },
 ]
 
-compute_scores(decisions)
+notifications: list = [{"id": "n1", "score": 0, "probability": 0}]
+
+compute_scores(decisions, notifications)

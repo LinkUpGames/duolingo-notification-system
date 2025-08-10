@@ -1,7 +1,14 @@
 import setuptools
 
 module = setuptools.Extension(
-    "scorer", sources=["module/python.c", "module/algorithm.c"], libraries=["m"]
+    "scorer",
+    sources=[
+        "module/python.c",
+        "module/algorithm.c",
+        "module/decision.c",
+        "module/notification.c",
+    ],
+    libraries=["m"],
 )
 
 setuptools.setup(

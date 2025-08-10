@@ -7,6 +7,7 @@ module = setuptools.Extension(
         "module/algorithm.c",
         "module/decision.c",
         "module/notification.c",
+        "module/map.c",
     ],
     libraries=["m"],
 )

@@ -22,27 +22,37 @@ void compute_scores(DecisionArray *decisions,
   // Loop through each decision
   for (size_t i = 0; i < decisions->length; i++) {
     Decision *decision = decisions->array[i];
+    const char *selected_id = decision->notification_id;
+    const int selected = decision->selected;
 
-    uintptr_t map_value;
-    hashmap_get(map, decision->notification_id,
-                strlen(decision->notification_id), &map_value);
+    // Update the values of all notifications
+    for (size_t j = 0; j < decision->probabilities->length; j++) {
+      // probability
+      Notification *p = decision->probabilities->array[j];
+      double probability = p->probability;
 
-    if (map_value) {
-      Notification *notification = (Notification *)map_value;
+      uintptr_t map_value;
+      hashmap_get(map, p->id, strlen(p->id), &map_value);
 
-      // Time Decay
-      long long elapsed =
-          notification->timestamp > 0 ? now - notification->timestamp : 0;
-      double decay_factor = exp(-lambda_decay * elapsed);
+      // The selected notification
+      if (map_value) {
+        Notification *notification = (Notification *)(map_value);
 
-      notification->m_plus *= decay_factor;
-      notification->m_minus *= decay_factor;
+        double elapsed =
+            (notification->timestamp > 0) ? now - notification->timestamp : 0.0;
+        double decay_factor = exp(-lambda_decay * elapsed);
+        notification->m_plus *= decay_factor;
+        notification->m_minus *= decay_factor;
 
-      if (decision->selected == 1) {
-        notification->m_plus += 1.0;
-        notification->selected = 1;
-      } else {
-        notification->m_minus += 1.0;
+        if (strcmp(notification->id, selected_id) == 0) {
+          if (selected == 1) {
+            notification->m_plus += 1.0;
+          } else {
+            notification->m_minus += 1.0;
+          }
+        } else {
+          notification->m_minus += probability;
+        }
       }
     }
   }
